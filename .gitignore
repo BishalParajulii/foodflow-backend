@@ -18,22 +18,38 @@ dist/
 
 # Django
 *.log
+logs/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
 media/
 staticfiles/
 celerybeat/
+
+# Docker
+docker-compose.override.yml
 
 # Environment
 .env
 .env.*
 !.env.example
 
+# Secrets / certs (never commit)
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+
 # Testing / coverage
 .pytest_cache/
+.hypothesis/
 .coverage
+.coverage.*
 coverage.xml
+coverage/
 htmlcov/
 .tox/
 
@@ -47,14 +63,20 @@ htmlcov/
 # IDEs
 .idea/
 .vscode/
+.fleet/
 *.swp
 *.swo
 *~
 .DS_Store
+Thumbs.db
 
 # Celery
-celerybeat-schedule
+celerybeat-schedule*
 celerybeat.pid
+
+# Local services (e.g. a locally-run redis-server)
+dump.rdb
+appendonlydir/
 
 # Node (in case frontend is added later; no frontend in this phase)
 node_modules/

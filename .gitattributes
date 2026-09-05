@@ -1,0 +1,13 @@
+# Keep shell entrypoints on LF endings (required by Docker on Windows checkouts).
+*.sh text eol=lf
+
+# Common text files.
+*.py text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.example text eol=lf
+.gitattributes text eol=lf
+.gitignore text eol=lf
+Dockerfile text eol=lf
