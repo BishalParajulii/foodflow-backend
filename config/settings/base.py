@@ -186,9 +186,24 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "FoodFlow API",
-    "DESCRIPTION": "Food delivery platform API (scaffolding — no endpoints yet).",
+    "DESCRIPTION": "Food delivery platform API: email/Google auth (JWT), restaurants, menus.",
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # Tag groups shown as sections in Swagger UI (/api/docs/).
+    "TAGS": [
+        {
+            "name": "Auth",
+            "description": "Signup, login (email + password / Google ID token), token refresh, profile, password, logout.",
+        },
+        {
+            "name": "Restaurants",
+            "description": "Register and browse restaurants.",
+        },
+        {
+            "name": "Menu",
+            "description": "Browse and manage categories, items and modifiers.",
+        },
+    ],
 }
 
 # ---------------------------------------------------------------------------

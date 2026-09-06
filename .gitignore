@@ -35,6 +35,7 @@ docker-compose.override.yml
 .env
 .env.*
 !.env.example
+!.env.docker.example
 
 # Secrets / certs (never commit)
 *.pem

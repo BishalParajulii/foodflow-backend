@@ -188,11 +188,13 @@ docker compose down -v     # stop + wipe DB/Redis volumes
 
 Notes:
 
-- No `.env` file is required. `docker-compose.yml` ships working local
-  defaults (`config.settings.production` with `SECURE_SSL_REDIRECT=False`,
-  `DATABASE_URL=postgres://foodflow:foodflow@db:5432/foodflow`,
-  `REDIS_URL=redis://redis:6379/0`). A `.env` file (see `.env.example`)
-  overrides any of these when present.
+- No env file is required. `docker-compose.yml` ships working local
+  defaults (production settings with `SECURE_SSL_REDIRECT=False`,
+  Postgres/Redis on the compose network). The local `.env` file is for
+  `manage.py`/pytest runs only and never affects containers. To override
+  container env (`SECRET_KEY`, `GOOGLE_CLIENT_ID`, …), copy
+  `.env.docker.example` to `.env.docker` (gitignored); infra addresses
+  (`DATABASE_URL`, `REDIS_URL`, …) are set in `docker-compose.yml` itself.
 - Only `web` runs `migrate` + `collectstatic` on startup (via
   `scripts/docker-entrypoint.sh`). Workers/beat skip them to avoid
   concurrent-migrate races. Override with `RUN_MIGRATIONS=1/0`.
@@ -240,10 +242,54 @@ curl http://localhost:8000/api/v1/auth/me/ \
   -H 'Authorization: Bearer <access>'
 ```
 
+## Restaurants API (`/api/v1/restaurants/`)
+
+Minimal slice (menu dependency; full profile, hours, branches land later).
+Public read; writes need the owning user (any authenticated user can register
+one — a `customer` is upgraded to `restaurant_owner`) or staff.
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| GET | `/api/v1/restaurants/` | No | List (search `?search=` name/description/address). |
+| POST | `/api/v1/restaurants/` | Yes | Register. Body: `name`, optional `description`, `phone`, `address`, `logo_url`. Slug auto-generated. |
+| GET/PATCH/PUT/DELETE | `/api/v1/restaurants/<id>/` | R/W | Read public; edit owner/staff only. |
+
+## Menu API (`/api/v1/menu/`)
+
+Public read (storefront browsing); writes need the restaurant's owner or
+staff. Slugs auto-generate and stay unique per scope (`momos`, `momos-2`).
+
+| Method | Endpoints | Description |
+| --- | --- | --- |
+| GET/POST | `/api/v1/menu/categories/` | List (`?restaurant=`, `?is_active=`, `?search=`) / create (`restaurant`, `name`, …). |
+| GET/PATCH/PUT/DELETE | `/api/v1/menu/categories/<id>/` | Includes `items_count`. |
+| GET/POST | `/api/v1/menu/items/` | List (`?restaurant=`, `?category=`, `?is_veg=`, `?is_available=`, `?min_price=`/`?max_price=`, `?search=`, `?ordering=price`) / create (`category`, `name`, `price`, optional `compare_at_price` ≥ price, `is_veg`, `is_available`, `preparation_time_minutes`, `modifier_groups: [ids]`). |
+| GET/… | `/api/v1/menu/items/<id>/` | Detail nests `modifier_groups_detail` → options; exposes `category_name`, `restaurant_id`. |
+| GET/POST | `/api/v1/menu/modifier-groups/` | Choice sets (`?restaurant=`), e.g. Size `min_select=1/max_select=1`, extras `min_select=0`. `min_select ≤ max_select` enforced (400 otherwise). |
+| GET/POST | `/api/v1/menu/modifier-options/` | Options within a group (`group`, `name`, `price_delta` ≥ 0). |
+
+ Queryset helpers: `Category.objects.active()`, `MenuItem.objects.available()`.
+
+Example:
+
+```bash
+TOKEN=<access-token>
+curl -X POST http://localhost:8000/api/v1/restaurants/ \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"name":"Momo House"}'                                   # -> {"id": 1, ...}
+
+curl -X POST http://localhost:8000/api/v1/menu/categories/ \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"restaurant":1,"name":"Momos"}'
+
+curl 'http://localhost:8000/api/v1/menu/items/?restaurant=1&is_veg=true'
+```
+
 ### Gmail login setup
 
 1. Create a Web OAuth client in Google Cloud Console (APIs & Services >
-   Credentials) and set `GOOGLE_CLIENT_ID` in `.env` (see `.env.example`).
+   Credentials) and set `GOOGLE_CLIENT_ID` in `.env` for local runs and/or
+   `.env.docker` for containers (see `.env.example` / `.env.docker.example`).
 2. In the client app, sign in with Google Identity Services to get an ID token.
 3. POST it to the backend:
 
@@ -255,27 +301,28 @@ curl -X POST http://localhost:8000/api/v1/auth/google/ \
 
 ## API versioning
 
-Future namespace: `/api/v1/`. Planned prefixes (not implemented):
+Namespace: `/api/v1/`. Implemented: `/api/v1/auth/`,
+`/api/v1/restaurants/`, `/api/v1/menu/`. Planned (not implemented):
 
 ```text
-/api/v1/auth/ /api/v1/restaurants/ /api/v1/menu/ /api/v1/cart/
-/api/v1/orders/ /api/v1/payments/ /api/v1/delivery/
+/api/v1/cart/ /api/v1/orders/ /api/v1/payments/ /api/v1/delivery/
 ```
 
-`config/urls.py` currently exposes only a project-level `/api/v1/` placeholder
-response plus commented `include()` hooks for future apps, and OpenAPI schema
-placeholders (`drf-spectacular`).
+`config/urls.py` exposes the project-level `/api/v1/` placeholder plus
+`include()` hooks per app, and OpenAPI schema/docs via `drf-spectacular`.
 
-## Confirmation: nothing implemented yet
+## Status
 
-- [x] No models / migrations beyond Django contrib
-- [x] No serializers / views / ViewSets / routers
-- [x] No app-level API endpoints
+- [x] Accounts: email-login User, JWT signup/login/refresh, Google login,
+      profile, change-password, logout (blacklist)
+- [x] Restaurants (minimal): register/list/retrieve/update, owner-or-staff write
+- [x] Menu: categories, items, modifier groups/options; public read,
+      owner-or-staff write; filters/search/ordering
 - [x] No Celery tasks
 - [x] No Channels consumers / routing / WebSocket endpoints
 - [x] No Redis caching logic
 - [x] No payments / delivery / PostGIS / notifications logic
 - [x] No frontend
-- [x] Docker stack added (`Dockerfile` + `docker-compose.yml` + Postgres/Redis/Celery)
+- [x] Docker stack (`Dockerfile` + `docker-compose.yml` + Postgres/Redis/Celery)
 
-Next phase (not started): custom User model in `apps.accounts`.
+Next: carts / orders.
