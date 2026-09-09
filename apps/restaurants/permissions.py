@@ -6,6 +6,8 @@ authenticated staff user or the restaurant's owner.
 
 from rest_framework import permissions
 
+from apps.accounts.models import Role
+
 
 def restaurant_of(obj):
     """Resolve the Restaurant behind a Restaurant/Category/MenuItem/Modifier."""
@@ -51,3 +53,37 @@ def ensure_can_write_restaurant(user, restaurant):
         return
     if restaurant is None or restaurant.owner_id != user.id:
         raise PermissionDenied("You do not own this restaurant.")
+
+
+def is_platform_admin(user) -> bool:
+    """Staff/superuser or the ADMIN role."""
+    return bool(
+        user.is_staff or user.is_superuser or getattr(user, "role", None) == Role.ADMIN
+    )
+
+
+class IsBranchManager(permissions.BasePermission):
+    """Branch management: fully restricted to the restaurant's owner or admins.
+
+    Unlike the storefront endpoints, even reads are private — branch data
+    (addresses, phones, hours) is managed from one place by owners/admins.
+    """
+
+    message = "Branch management is restricted to the restaurant owner or admins."
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user or not user.is_authenticated:
+            return False
+        if is_platform_admin(user):
+            return True
+        restaurant = view.get_parent_restaurant()
+        return restaurant.owner_id == user.id
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        if not user or not user.is_authenticated:
+            return False
+        if is_platform_admin(user):
+            return True
+        return obj.restaurant.owner_id == user.id

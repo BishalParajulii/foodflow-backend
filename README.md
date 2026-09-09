@@ -244,15 +244,21 @@ curl http://localhost:8000/api/v1/auth/me/ \
 
 ## Restaurants API (`/api/v1/restaurants/`)
 
-Minimal slice (menu dependency; full profile, hours, branches land later).
-Public read; writes need the owning user (any authenticated user can register
-one — a `customer` is upgraded to `restaurant_owner`) or staff.
+Restaurant = brand/chain (e.g. "Momo House"). Each restaurant has many
+**branches** (physical outlets), managed nested under it — one place.
+Restaurant browsing is public; writes need the owner (any authenticated user
+can register one — a `customer` is upgraded to `restaurant_owner`) or staff.
+**Branches are fully private: list, read, create, update and delete all
+require the restaurant's owner or an admin** (`is_staff`/`is_superuser` or
+`role=admin`).
 
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
 | GET | `/api/v1/restaurants/` | No | List (search `?search=` name/description/address). |
 | POST | `/api/v1/restaurants/` | Yes | Register. Body: `name`, optional `description`, `phone`, `address`, `logo_url`. Slug auto-generated. |
-| GET/PATCH/PUT/DELETE | `/api/v1/restaurants/<id>/` | R/W | Read public; edit owner/staff only. |
+| GET/PATCH/PUT/DELETE | `/api/v1/restaurants/<id>/` | R/W | Detail nests `branches` + `branches_count`; edit owner/staff only. |
+| GET/POST | `/api/v1/restaurants/<id>/branches/` | Owner/admin | List/add outlets. Body: `name`, optional `address`, `phone`, `latitude`/`longitude`, `opening_time`/`closing_time`, `is_active`. Slug auto-generated per restaurant. |
+| GET/PATCH/PUT/DELETE | `/api/v1/restaurants/<id>/branches/<bid>/` | Owner/admin | Scoped to the parent — another restaurant's branch returns 404. |
 
 ## Menu API (`/api/v1/menu/`)
 
@@ -315,7 +321,8 @@ Namespace: `/api/v1/`. Implemented: `/api/v1/auth/`,
 
 - [x] Accounts: email-login User, JWT signup/login/refresh, Google login,
       profile, change-password, logout (blacklist)
-- [x] Restaurants (minimal): register/list/retrieve/update, owner-or-staff write
+- [x] Restaurants: brand + nested branches (owner/admin-only branch
+      management), public browsing, owner-or-staff writes
 - [x] Menu: categories, items, modifier groups/options; public read,
       owner-or-staff write; filters/search/ordering
 - [x] No Celery tasks
