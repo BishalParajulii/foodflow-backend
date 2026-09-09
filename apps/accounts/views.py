@@ -2,7 +2,6 @@
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status
-from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import (
@@ -19,6 +18,8 @@ from apps.accounts.serializers import (
     SignupSerializer,
     UserSerializer,
 )
+from apps.common.mixins import SuccessResponseMixin
+from apps.common.responses import success_response
 
 
 @extend_schema(tags=["Auth"])
@@ -32,13 +33,14 @@ class SignupView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
-        return Response(
+        return success_response(
             {
                 "user": UserSerializer(user).data,
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
             },
-            status=status.HTTP_201_CREATED,
+            message="Account created successfully.",
+            status_code=status.HTTP_201_CREATED,
         )
 
 
@@ -49,7 +51,12 @@ class LoginView(TokenObtainPairView):
 
     @extend_schema(summary="Log in with email + password, receive a JWT pair")
     def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
+        response = super().post(request, *args, **kwargs)
+        return success_response(
+            response.data,
+            message="Logged in successfully.",
+            status_code=response.status_code,
+        )
 
 
 @extend_schema(tags=["Auth"])
@@ -63,23 +70,29 @@ class GoogleLoginView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
-        return Response(
+        return success_response(
             {
                 "user": UserSerializer(user).data,
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
                 "created": serializer.created,
             },
-            status=status.HTTP_200_OK,
+            message="Google authentication successful.",
+            status_code=status.HTTP_200_OK,
         )
 
 
 @extend_schema(tags=["Auth"])
-class MeView(generics.RetrieveUpdateAPIView):
+class MeView(SuccessResponseMixin, generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
     queryset = User.objects.all()
     http_method_names = ["get", "patch", "put", "head", "options"]
+    success_messages = {
+        "retrieve": "Profile retrieved successfully.",
+        "update": "Profile updated successfully.",
+        "partial_update": "Profile updated successfully.",
+    }
 
     def get_object(self):
         return self.request.user
@@ -112,7 +125,7 @@ class ChangePasswordView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({"detail": "Password changed successfully."})
+        return success_response(message="Password changed successfully.")
 
 
 @extend_schema(tags=["Auth"])
@@ -128,12 +141,14 @@ class LogoutView(APIView):
         serializer = LogoutSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({"detail": "Logged out successfully."})
+        return success_response(message="Logged out successfully.")
 
 
 @extend_schema(tags=["Auth"], summary="Refresh the access token")
-class TokenRefreshView(SimpleJWTTokenRefreshView):
+class TokenRefreshView(SuccessResponseMixin, SimpleJWTTokenRefreshView):
     """Rotate a refresh token to get a new access token."""
+
+    success_message = "Token refreshed successfully."
 
 
 __all__ = [

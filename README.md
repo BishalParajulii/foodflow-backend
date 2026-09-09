@@ -212,6 +212,23 @@ Notes:
 
 `AUTH_USER_MODEL = "accounts.User"` (email-login custom user in `apps.accounts`).
 
+## Response format
+
+Every API response uses the envelope (all ids are UUID strings):
+
+```json
+// Success (2xx)
+{ "success": true, "message": "Item added to cart.", "data": { "id": "…" } }
+
+// Error (4xx)
+{ "success": false,
+  "error": { "code": "validation_error", "message": "Invalid input.",
+             "details": { "price": ["Ensure this value is …"] } } }
+```
+
+Error `code`s: `validation_error`, `authentication_error`,
+`permission_denied`, `not_found`, `throttled`, `integrity_error`.
+
 ## Auth API (`/api/v1/auth/`)
 
 Email + JWT (SimpleJWT, access 60 min / refresh 7 days by default,

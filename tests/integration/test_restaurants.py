@@ -27,8 +27,9 @@ def test_create_restaurant_sets_owner_and_upgrades_role():
         RESTAURANTS_URL, {"name": "Momo House", "phone": "+9779800000001"}, format="json"
     )
     assert response.status_code == 201, response.data
-    assert response.data["owner"] == user.id
-    assert response.data["slug"] == "momo-house"
+    data = response.data["data"]
+    assert str(data["owner"]) == str(user.id)
+    assert data["slug"] == "momo-house"
     user.refresh_from_db()
     assert user.role == Role.RESTAURANT_OWNER
 
@@ -48,9 +49,9 @@ def test_restaurant_list_is_public_but_writes_are_owner_only():
 
     response = APIClient().get(RESTAURANTS_URL)
     assert response.status_code == 200
-    assert response.data["count"] == 1
+    assert response.data["data"]["count"] == 1
 
-    restaurant_id = response.data["results"][0]["id"]
+    restaurant_id = response.data["data"]["results"][0]["id"]
     stranger = _user("stranger@example.com")
     response = _auth_client(stranger).patch(
         f"{RESTAURANTS_URL}{restaurant_id}/", {"phone": "+9779800000002"}, format="json"

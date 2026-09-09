@@ -81,8 +81,9 @@ def test_cart_starts_empty_and_requires_auth(customer):
     assert APIClient().get(CART_URL).status_code in (401, 403)
     response = _auth(customer).get(CART_URL)
     assert response.status_code == 200
-    assert response.data["items"] == []
-    assert Decimal(response.data["subtotal"]) == Decimal("0.00")
+    data = response.data["data"]
+    assert data["items"] == []
+    assert Decimal(data["subtotal"]) == Decimal("0.00")
 
 
 @pytest.mark.django_db
@@ -90,17 +91,18 @@ def test_add_item_with_modifier_and_totals(customer, shop):
     response = _auth(customer).post(
         ITEMS_URL,
         {
-            "menu_item": shop["item"].id,
+            "menu_item": str(shop["item"].id),
             "quantity": 2,
-            "selected_options": [shop["large"].id],
+            "selected_options": [str(shop["large"].id)],
         },
         format="json",
     )
     assert response.status_code == 200, response.data
-    assert response.data["item_count"] == 2
+    data = response.data["data"]
+    assert data["item_count"] == 2
     # (180 + 60) * 2
-    assert Decimal(response.data["subtotal"]) == Decimal("480.00")
-    line = response.data["items"][0]
+    assert Decimal(data["subtotal"]) == Decimal("480.00")
+    line = data["items"][0]
     assert Decimal(line["unit_price"]) == Decimal("240.00")
     assert line["selected_options_detail"][0]["name"] == "Large"
 
@@ -108,22 +110,22 @@ def test_add_item_with_modifier_and_totals(customer, shop):
 @pytest.mark.django_db
 def test_same_item_and_modifiers_merge(customer, shop):
     client = _auth(customer)
-    payload = {"menu_item": shop["plain"].id, "quantity": 1}
+    payload = {"menu_item": str(shop["plain"].id), "quantity": 1}
     client.post(ITEMS_URL, payload, format="json")
     response = client.post(ITEMS_URL, payload, format="json")
-    assert len(response.data["items"]) == 1
-    assert response.data["items"][0]["quantity"] == 2
+    assert len(response.data["data"]["items"]) == 1
+    assert response.data["data"]["items"][0]["quantity"] == 2
 
 
 @pytest.mark.django_db
 def test_same_item_different_modifiers_are_separate_lines(customer, shop):
     client = _auth(customer)
-    base = {"menu_item": shop["item"].id, "quantity": 1}
-    client.post(ITEMS_URL, {**base, "selected_options": [shop["small"].id]}, format="json")
+    base = {"menu_item": str(shop["item"].id), "quantity": 1}
+    client.post(ITEMS_URL, {**base, "selected_options": [str(shop["small"].id)]}, format="json")
     response = client.post(
-        ITEMS_URL, {**base, "selected_options": [shop["large"].id]}, format="json"
+        ITEMS_URL, {**base, "selected_options": [str(shop["large"].id)]}, format="json"
     )
-    assert len(response.data["items"]) == 2
+    assert len(response.data["data"]["items"]) == 2
 
 
 @pytest.mark.django_db
@@ -132,9 +134,9 @@ def test_single_restaurant_rule_and_clear(customer, shop, other_restaurant, owne
     client.post(
         ITEMS_URL,
         {
-            "menu_item": shop["item"].id,
+            "menu_item": str(shop["item"].id),
             "quantity": 1,
-            "selected_options": [shop["small"].id],
+            "selected_options": [str(shop["small"].id)],
         },
         format="json",
     )
@@ -145,23 +147,23 @@ def test_single_restaurant_rule_and_clear(customer, shop, other_restaurant, owne
         category=other_category, name="Margherita", price=500
     )
     response = client.post(
-        ITEMS_URL, {"menu_item": other_item.id, "quantity": 1}, format="json"
+        ITEMS_URL, {"menu_item": str(other_item.id), "quantity": 1}, format="json"
     )
     assert response.status_code == 400
-    assert "another restaurant" in response.data["detail"]
+    assert "another restaurant" in response.data["error"]["message"]
 
     assert client.delete(CLEAR_URL).status_code == 200
     response = client.post(
-        ITEMS_URL, {"menu_item": other_item.id, "quantity": 1}, format="json"
+        ITEMS_URL, {"menu_item": str(other_item.id), "quantity": 1}, format="json"
     )
     assert response.status_code == 200, response.data
-    assert response.data["restaurant"] == other_restaurant.id
+    assert str(response.data["data"]["restaurant"]) == str(other_restaurant.id)
 
 
 @pytest.mark.django_db
 def test_required_modifier_group_enforced(customer, shop):
     response = _auth(customer).post(
-        ITEMS_URL, {"menu_item": shop["item"].id, "quantity": 1}, format="json"
+        ITEMS_URL, {"menu_item": str(shop["item"].id), "quantity": 1}, format="json"
     )
     assert response.status_code == 400
     assert "Size" in str(response.data)
@@ -172,9 +174,9 @@ def test_foreign_modifier_option_rejected(customer, shop):
     response = _auth(customer).post(
         ITEMS_URL,
         {
-            "menu_item": shop["plain"].id,
+            "menu_item": str(shop["plain"].id),
             "quantity": 1,
-            "selected_options": [shop["foreign"].id],
+            "selected_options": [str(shop["foreign"].id)],
         },
         format="json",
     )
@@ -186,7 +188,7 @@ def test_unavailable_item_rejected(customer, shop):
     shop["plain"].is_available = False
     shop["plain"].save(update_fields=["is_available"])
     response = _auth(customer).post(
-        ITEMS_URL, {"menu_item": shop["plain"].id, "quantity": 1}, format="json"
+        ITEMS_URL, {"menu_item": str(shop["plain"].id), "quantity": 1}, format="json"
     )
     assert response.status_code == 400
 
@@ -197,20 +199,20 @@ def test_patch_quantity_and_delete_resets_restaurant(customer, shop):
     line_id = client.post(
         ITEMS_URL,
         {
-            "menu_item": shop["item"].id,
+            "menu_item": str(shop["item"].id),
             "quantity": 1,
-            "selected_options": [shop["small"].id],
+            "selected_options": [str(shop["small"].id)],
         },
         format="json",
-    ).data["items"][0]["id"]
+    ).data["data"]["items"][0]["id"]
 
     response = client.patch(f"{ITEMS_URL}{line_id}/", {"quantity": 3}, format="json")
     assert response.status_code == 200
-    assert response.data["quantity"] == 3
+    assert response.data["data"]["quantity"] == 3
 
     assert client.patch(f"{ITEMS_URL}{line_id}/", {"quantity": 0}, format="json").status_code == 400
 
-    cart = client.delete(f"{ITEMS_URL}{line_id}/").data
+    cart = client.delete(f"{ITEMS_URL}{line_id}/").data["data"]
     assert cart["items"] == [] and cart["restaurant"] is None
 
 
@@ -221,13 +223,13 @@ def test_users_cannot_touch_each_others_lines(customer, other_customer, shop):
         .post(
             ITEMS_URL,
             {
-                "menu_item": shop["item"].id,
+                "menu_item": str(shop["item"].id),
                 "quantity": 1,
-                "selected_options": [shop["small"].id],
+                "selected_options": [str(shop["small"].id)],
             },
             format="json",
         )
-        .data["items"][0]["id"]
+        .data["data"]["items"][0]["id"]
     )
     stranger = _auth(other_customer)
     assert stranger.patch(f"{ITEMS_URL}{line_id}/", {"quantity": 5}, format="json").status_code == 404

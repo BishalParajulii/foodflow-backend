@@ -182,6 +182,8 @@ REST_FRAMEWORK = {
     },
     # OpenAPI schema generation (drf-spectacular).
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Universal envelope for errors (success envelope via views/mixin).
+    "EXCEPTION_HANDLER": "apps.common.exceptions.custom_exception_handler",
 }
 
 SPECTACULAR_SETTINGS = {

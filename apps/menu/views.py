@@ -4,6 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters, viewsets
 
+from apps.common.mixins import SuccessResponseMixin
 from apps.menu.filters import CategoryFilter, MenuItemFilter, ModifierGroupFilter
 from apps.menu.models import Category, MenuItem, ModifierGroup, ModifierOption
 from apps.menu.serializers import (
@@ -27,7 +28,7 @@ from apps.restaurants.permissions import (
     update=extend_schema(summary="Replace a category"),
     destroy=extend_schema(summary="Delete a category"),
 )
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(SuccessResponseMixin, viewsets.ModelViewSet):
     queryset = Category.objects.select_related("restaurant").all()
     serializer_class = CategorySerializer
     permission_classes = [IsRestaurantOwnerOrReadOnly]
@@ -51,7 +52,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     update=extend_schema(summary="Replace a menu item"),
     destroy=extend_schema(summary="Delete a menu item"),
 )
-class MenuItemViewSet(viewsets.ModelViewSet):
+class MenuItemViewSet(SuccessResponseMixin, viewsets.ModelViewSet):
     queryset = (
         MenuItem.objects.select_related("category", "category__restaurant")
         .prefetch_related("modifier_groups__options")
@@ -80,7 +81,7 @@ class MenuItemViewSet(viewsets.ModelViewSet):
     update=extend_schema(summary="Replace a modifier group"),
     destroy=extend_schema(summary="Delete a modifier group"),
 )
-class ModifierGroupViewSet(viewsets.ModelViewSet):
+class ModifierGroupViewSet(SuccessResponseMixin, viewsets.ModelViewSet):
     queryset = ModifierGroup.objects.select_related("restaurant").prefetch_related(
         "options"
     )
@@ -106,7 +107,7 @@ class ModifierGroupViewSet(viewsets.ModelViewSet):
     update=extend_schema(summary="Replace a modifier option"),
     destroy=extend_schema(summary="Delete a modifier option"),
 )
-class ModifierOptionViewSet(viewsets.ModelViewSet):
+class ModifierOptionViewSet(SuccessResponseMixin, viewsets.ModelViewSet):
     queryset = ModifierOption.objects.select_related("group", "group__restaurant").all()
     serializer_class = ModifierOptionSerializer
     permission_classes = [IsRestaurantOwnerOrReadOnly]

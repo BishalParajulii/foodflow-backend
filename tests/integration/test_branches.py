@@ -57,11 +57,12 @@ def test_owner_can_crud_branches(owner, restaurant):
         format="json",
     )
     assert response.status_code == 201, response.data
-    assert response.data["slug"] == "thamel-outlet"
-    assert response.data["restaurant"] == restaurant.id
-    branch_id = response.data["id"]
+    data = response.data["data"]
+    assert data["slug"] == "thamel-outlet"
+    assert str(data["restaurant"]) == str(restaurant.id)
+    branch_id = data["id"]
 
-    assert client.get(url).data["count"] == 1
+    assert client.get(url).data["data"]["count"] == 1
 
     response = client.patch(
         f"{url}{branch_id}/", {"phone": "+9779800000002"}, format="json"
@@ -103,7 +104,7 @@ def test_branches_scoped_to_parent_restaurant(owner):
 
     client = _auth_client(owner)
     # Another restaurant's branch is invisible under mine.
-    assert client.get(_branches_url(mine.id)).data["count"] == 0
+    assert client.get(_branches_url(mine.id)).data["data"]["count"] == 0
     assert client.get(f"{_branches_url(mine.id)}{branch.id}/").status_code == 404
     # Unknown restaurant is 404, not 403 (no info leak about existence).
     assert client.get(_branches_url(9999)).status_code == 404
@@ -116,7 +117,7 @@ def test_branch_slugs_unique_per_restaurant(owner, restaurant):
     assert client.post(url, {"name": "Thamel"}, format="json").status_code == 201
     response = client.post(url, {"name": "Thamel"}, format="json")
     assert response.status_code == 201
-    assert response.data["slug"] == "thamel-2"
+    assert response.data["data"]["slug"] == "thamel-2"
 
 
 @pytest.mark.django_db
@@ -125,8 +126,8 @@ def test_restaurant_detail_nests_branches(owner, restaurant):
     Branch.objects.create(restaurant=restaurant, name="Lalitpur Outlet")
     response = _auth_client(owner).get(f"/api/v1/restaurants/{restaurant.id}/")
     assert response.status_code == 200
-    assert response.data["branches_count"] == 2
-    assert {b["name"] for b in response.data["branches"]} == {
+    assert response.data["data"]["branches_count"] == 2
+    assert {b["name"] for b in response.data["data"]["branches"]} == {
         "Thamel Outlet",
         "Lalitpur Outlet",
     }

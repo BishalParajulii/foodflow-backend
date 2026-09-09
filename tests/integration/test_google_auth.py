@@ -39,11 +39,12 @@ def test_google_login_creates_new_verified_user():
     ):
         response = _google_post(client)
     assert response.status_code == 200, response.data
-    assert response.data["created"] is True
-    assert response.data["user"]["email"] == "guser@example.com"
-    assert response.data["user"]["is_verified"] is True
-    assert response.data["user"]["first_name"] == "Goo"
-    assert response.data["access"] and response.data["refresh"]
+    data = response.data["data"]
+    assert data["created"] is True
+    assert data["user"]["email"] == "guser@example.com"
+    assert data["user"]["is_verified"] is True
+    assert data["user"]["first_name"] == "Goo"
+    assert data["access"] and data["refresh"]
 
     user = User.objects.get(email="guser@example.com")
     assert user.is_verified is True
@@ -69,8 +70,8 @@ def test_google_login_links_existing_password_user():
     ):
         response = _google_post(client)
     assert response.status_code == 200, response.data
-    assert response.data["created"] is False
-    assert response.data["access"] and response.data["refresh"]
+    assert response.data["data"]["created"] is False
+    assert response.data["data"]["access"] and response.data["data"]["refresh"]
 
     user = User.objects.get(email="guser@example.com")
     assert user.has_usable_password()  # password login still works
@@ -84,6 +85,7 @@ def test_google_login_rejects_unverified_email():
     with patch("apps.accounts.google.verify_google_id_token", return_value=claims):
         response = _google_post(APIClient())
     assert response.status_code == 400
+    assert response.data["success"] is False
 
 
 @override_settings(GOOGLE_CLIENT_ID="test-client-id")

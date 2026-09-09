@@ -32,10 +32,23 @@ def test_signup_returns_user_and_jwt_pair():
     client = APIClient()
     response = _signup(client)
     assert response.status_code == 201, response.data
-    assert response.data["user"]["email"] == "customer@example.com"
-    assert response.data["user"]["role"] == "customer"
-    assert response.data["access"] and response.data["refresh"]
-    assert User.objects.filter(email="customer@example.com").exists()
+    assert response.data["success"] is True
+    data = response.data["data"]
+    assert data["user"]["email"] == "customer@example.com"
+    assert data["user"]["role"] == "customer"
+    assert data["access"] and data["refresh"]
+    user = User.objects.get(email="customer@example.com")
+    assert str(user.id) == data["user"]["id"]  # UUID string in API
+
+
+@pytest.mark.django_db
+def test_error_envelope_shape():
+    response = _signup(APIClient(), email="not-an-email")
+    assert response.status_code == 400
+    assert response.data["success"] is False
+    error = response.data["error"]
+    assert error["code"] == "validation_error"
+    assert error["message"] and error["details"]
 
 
 @pytest.mark.django_db
@@ -43,7 +56,7 @@ def test_signup_with_role():
     client = APIClient()
     response = _signup(client, email="owner@example.com", role="restaurant_owner")
     assert response.status_code == 201, response.data
-    assert response.data["user"]["role"] == "restaurant_owner"
+    assert response.data["data"]["user"]["role"] == "restaurant_owner"
 
 
 @pytest.mark.django_db
@@ -65,8 +78,9 @@ def test_login_returns_tokens_and_user():
         LOGIN_URL, {"email": "login@example.com", "password": PASSWORD}, format="json"
     )
     assert response.status_code == 200, response.data
-    assert response.data["access"] and response.data["refresh"]
-    assert response.data["user"]["email"] == "login@example.com"
+    data = response.data["data"]
+    assert data["access"] and data["refresh"]
+    assert data["user"]["email"] == "login@example.com"
 
 
 @pytest.mark.django_db
@@ -92,27 +106,27 @@ def test_me_requires_auth_and_supports_get_patch():
     assert APIClient().get(ME_URL).status_code in (401, 403)
 
     client = APIClient()
-    tokens = _signup(client, email="me@example.com").data
+    tokens = _signup(client, email="me@example.com").data["data"]
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
 
     response = client.get(ME_URL)
     assert response.status_code == 200
-    assert response.data["email"] == "me@example.com"
+    assert response.data["data"]["email"] == "me@example.com"
 
     response = client.patch(ME_URL, {"first_name": "New", "phone": "+10000000001"}, format="json")
     assert response.status_code == 200, response.data
-    assert response.data["first_name"] == "New"
+    assert response.data["data"]["first_name"] == "New"
 
     # Role escalation via profile update is not allowed (read-only).
     response = client.patch(ME_URL, {"role": "admin"}, format="json")
     assert response.status_code == 200
-    assert response.data["role"] == "customer"
+    assert response.data["data"]["role"] == "customer"
 
 
 @pytest.mark.django_db
 def test_change_password_and_relogin():
     client = APIClient()
-    tokens = _signup(client, email="pw@example.com").data
+    tokens = _signup(client, email="pw@example.com").data["data"]
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
 
     response = client.post(
@@ -125,6 +139,7 @@ def test_change_password_and_relogin():
         format="json",
     )
     assert response.status_code == 200, response.data
+    assert response.data["success"] is True
 
     # Old password no longer works, new one does.
     anon = APIClient()
@@ -145,15 +160,17 @@ def test_change_password_and_relogin():
 @pytest.mark.django_db
 def test_refresh_and_logout_blacklists_token():
     client = APIClient()
-    tokens = _signup(client, email="sess@example.com").data
+    tokens = _signup(client, email="sess@example.com").data["data"]
 
     response = client.post(REFRESH_URL, {"refresh": tokens["refresh"]}, format="json")
     assert response.status_code == 200, response.data
-    rotated_refresh = response.data["refresh"]
+    rotated_refresh = response.data["data"]["refresh"]
 
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
     response = client.post(LOGOUT_URL, {"refresh": rotated_refresh}, format="json")
     assert response.status_code == 200, response.data
 
     # Blacklisted refresh token can no longer be used.
-    assert client.post(REFRESH_URL, {"refresh": rotated_refresh}, format="json").status_code == 401
+    response = client.post(REFRESH_URL, {"refresh": rotated_refresh}, format="json")
+    assert response.status_code == 401
+    assert response.data["success"] is False
