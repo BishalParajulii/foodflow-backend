@@ -50,8 +50,8 @@ urlpatterns = [
     path("api/v1/auth/", include("apps.accounts.urls")),
     path("api/v1/restaurants/", include("apps.restaurants.urls")),
     path("api/v1/menu/", include("apps.menu.urls")),
+    path("api/v1/cart/", include("apps.carts.urls")),
     # Future app endpoints (NOT implemented in this phase):
-    # path("api/v1/cart/", include("apps.carts.urls")),
     # path("api/v1/orders/", include("apps.orders.urls")),
     # path("api/v1/payments/", include("apps.payments.urls")),
     # path("api/v1/delivery/", include("apps.delivery.urls")),
