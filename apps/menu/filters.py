@@ -12,7 +12,7 @@ class CategoryFilter(django_filters.FilterSet):
 
 
 class MenuItemFilter(django_filters.FilterSet):
-    restaurant = django_filters.NumberFilter(
+    restaurant = django_filters.UUIDFilter(
         field_name="category__restaurant", help_text="Filter by restaurant id."
     )
     min_price = django_filters.NumberFilter(field_name="price", lookup_expr="gte")

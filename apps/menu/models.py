@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from apps.common.models import TimeStampedModel, unique_slug
+from apps.common.models import BaseModel, unique_slug
 from apps.restaurants.models import Restaurant
 
 
@@ -18,7 +18,7 @@ class CategoryQuerySet(models.QuerySet):
         return self.filter(is_active=True, restaurant__is_active=True)
 
 
-class Category(TimeStampedModel):
+class Category(BaseModel):
     """A grouping of items within a restaurant (e.g. "Momos", "Beverages")."""
 
     restaurant = models.ForeignKey(
@@ -61,7 +61,7 @@ class MenuItemQuerySet(models.QuerySet):
         )
 
 
-class MenuItem(TimeStampedModel):
+class MenuItem(BaseModel):
     """A sellable dish/item on the menu."""
 
     category = models.ForeignKey(
@@ -127,7 +127,7 @@ class MenuItem(TimeStampedModel):
         super().save(*args, **kwargs)
 
 
-class ModifierGroup(TimeStampedModel):
+class ModifierGroup(BaseModel):
     """A choice set attached to items (e.g. "Size": 1 required of 3)."""
 
     restaurant = models.ForeignKey(
@@ -167,7 +167,7 @@ class ModifierGroup(TimeStampedModel):
         super().save(*args, **kwargs)
 
 
-class ModifierOption(TimeStampedModel):
+class ModifierOption(BaseModel):
     """One selectable option within a group (e.g. "Large" +Rs 60)."""
 
     group = models.ForeignKey(

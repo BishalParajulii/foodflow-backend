@@ -3,10 +3,10 @@
 from django.conf import settings
 from django.db import models
 
-from apps.common.models import TimeStampedModel, unique_slug
+from apps.common.models import BaseModel, unique_slug
 
 
-class Restaurant(TimeStampedModel):
+class Restaurant(BaseModel):
     """A food outlet. Owned by a user (typically role=restaurant_owner)."""
 
     owner = models.ForeignKey(
@@ -36,7 +36,7 @@ class Restaurant(TimeStampedModel):
         super().save(*args, **kwargs)
 
 
-class Branch(TimeStampedModel):
+class Branch(BaseModel):
     """A physical outlet of a restaurant chain. Managed by owner/admins only."""
 
     restaurant = models.ForeignKey(

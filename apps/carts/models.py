@@ -10,14 +10,14 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from apps.common.models import TimeStampedModel
+from apps.common.models import BaseModel
 from apps.menu.models import ModifierOption
 from apps.restaurants.models import Restaurant
 
 MAX_QUANTITY = 99
 
 
-class Cart(TimeStampedModel):
+class Cart(BaseModel):
     """The active cart of a user (created on demand)."""
 
     user = models.OneToOneField(
@@ -63,7 +63,7 @@ class Cart(TimeStampedModel):
             self.save(update_fields=["restaurant", "updated_at"])
 
 
-class CartItem(TimeStampedModel):
+class CartItem(BaseModel):
     """One line in a cart: item + quantity + chosen modifier options."""
 
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")

@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters, viewsets
 
+from apps.common.mixins import SuccessResponseMixin
 from apps.restaurants.models import Branch, Restaurant
 from apps.restaurants.permissions import IsBranchManager, IsRestaurantOwnerOrReadOnly
 from apps.restaurants.serializers import (
@@ -26,7 +27,7 @@ from apps.restaurants.serializers import (
     update=extend_schema(summary="Replace a restaurant"),
     destroy=extend_schema(summary="Delete a restaurant"),
 )
-class RestaurantViewSet(RestaurantCreateMixin, viewsets.ModelViewSet):
+class RestaurantViewSet(SuccessResponseMixin, RestaurantCreateMixin, viewsets.ModelViewSet):
     queryset = Restaurant.objects.select_related("owner").prefetch_related("branches")
     serializer_class = RestaurantSerializer
     permission_classes = [IsRestaurantOwnerOrReadOnly]
@@ -46,7 +47,7 @@ class RestaurantViewSet(RestaurantCreateMixin, viewsets.ModelViewSet):
     update=extend_schema(summary="Replace a branch (owner/admin)"),
     destroy=extend_schema(summary="Delete a branch (owner/admin)"),
 )
-class BranchViewSet(viewsets.ModelViewSet):
+class BranchViewSet(SuccessResponseMixin, viewsets.ModelViewSet):
     serializer_class = BranchSerializer
     permission_classes = [IsBranchManager]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]

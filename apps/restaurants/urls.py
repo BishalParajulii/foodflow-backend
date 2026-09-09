@@ -25,7 +25,7 @@ branch_detail = BranchViewSet.as_view(
 )
 
 urlpatterns = [
-    path("<int:restaurant_pk>/branches/", branch_list, name="branch-list"),
-    path("<int:restaurant_pk>/branches/<int:pk>/", branch_detail, name="branch-detail"),
+    path("<uuid:restaurant_pk>/branches/", branch_list, name="branch-list"),
+    path("<uuid:restaurant_pk>/branches/<uuid:pk>/", branch_detail, name="branch-detail"),
     *router.urls,
 ]

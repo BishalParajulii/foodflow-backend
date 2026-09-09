@@ -5,6 +5,8 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.utils import timezone
 
+from apps.common.models import BaseModel
+
 
 class Role(models.TextChoices):
     CUSTOMER = "customer", "Customer"
@@ -41,7 +43,7 @@ class UserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(BaseModel, AbstractBaseUser, PermissionsMixin):
     """Project user. Email is the login identifier (no username field)."""
 
     email = models.EmailField("email address", unique=True)

@@ -8,8 +8,9 @@
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status
-from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from apps.common.responses import error_response, success_response
 
 from apps.carts.serializers import (
     CartItemSerializer,
@@ -25,7 +26,10 @@ class CartDetailView(APIView):
 
     @extend_schema(tags=["Cart"], responses=CartSerializer, summary="Get my cart")
     def get(self, request):
-        return Response(CartSerializer(get_user_cart(request.user)).data)
+        return success_response(
+            CartSerializer(get_user_cart(request.user)).data,
+            message="Cart retrieved successfully.",
+        )
 
 
 class CartItemCreateView(APIView):
@@ -48,14 +52,11 @@ class CartItemCreateView(APIView):
             cart.restaurant = item.category.restaurant
             cart.save(update_fields=["restaurant", "updated_at"])
         elif cart.restaurant_id != item.category.restaurant_id:
-            return Response(
-                {
-                    "detail": (
-                        "Your cart has items from another restaurant. "
-                        "Clear it first (DELETE /api/v1/cart/clear/)."
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                "Your cart has items from another restaurant. "
+                "Clear it first (DELETE /api/v1/cart/clear/).",
+                code="different_restaurant",
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
         line = cart.find_line(item, {o.id for o in options})
@@ -67,7 +68,9 @@ class CartItemCreateView(APIView):
             )
             line.save(update_fields=["quantity", "updated_at"])
         cart.refresh_from_db()
-        return Response(CartSerializer(cart).data)
+        return success_response(
+            CartSerializer(cart).data, message="Item added to cart."
+        )
 
 
 class CartItemDetailView(APIView):
@@ -84,7 +87,7 @@ class CartItemDetailView(APIView):
         serializer = CartItemSerializer(line, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data)
+        return success_response(serializer.data, message="Cart line updated.")
 
     @extend_schema(tags=["Cart"], summary="Remove a line from my cart")
     def delete(self, request, pk):
@@ -92,7 +95,9 @@ class CartItemDetailView(APIView):
         cart = line.cart
         line.delete()
         cart.reset_restaurant_if_empty()
-        return Response(CartSerializer(cart).data)
+        return success_response(
+            CartSerializer(cart).data, message="Cart line removed."
+        )
 
 
 class CartClearView(APIView):
@@ -103,4 +108,6 @@ class CartClearView(APIView):
         cart = get_user_cart(request.user)
         cart.items.all().delete()
         cart.reset_restaurant_if_empty()
-        return Response(CartSerializer(cart).data)
+        return success_response(
+            CartSerializer(cart).data, message="Cart cleared successfully."
+        )

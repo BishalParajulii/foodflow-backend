@@ -1,4 +1,6 @@
-"""Shared model utilities: timestamp base + scoped unique slugs."""
+"""Shared model utilities: base model, timestamps, scoped unique slugs."""
+
+import uuid
 
 from django.db import models
 from django.utils.text import slugify
@@ -9,6 +11,18 @@ class TimeStampedModel(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class BaseModel(TimeStampedModel):
+    """Project base: non-enumerable UUID primary key + timestamps.
+
+    All app models inherit this (company blueprint: UUID everywhere).
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     class Meta:
         abstract = True
