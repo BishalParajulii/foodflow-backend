@@ -5,7 +5,10 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView as SimpleJWTTokenRefreshView,
+)
 
 from apps.accounts.models import User
 from apps.accounts.serializers import (
@@ -18,6 +21,7 @@ from apps.accounts.serializers import (
 )
 
 
+@extend_schema(tags=["Auth"])
 class SignupView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = SignupSerializer
@@ -38,6 +42,7 @@ class SignupView(generics.CreateAPIView):
         )
 
 
+@extend_schema(tags=["Auth"])
 class LoginView(TokenObtainPairView):
     permission_classes = [permissions.AllowAny]
     serializer_class = LoginSerializer
@@ -47,6 +52,7 @@ class LoginView(TokenObtainPairView):
         return super().post(request, *args, **kwargs)
 
 
+@extend_schema(tags=["Auth"])
 class GoogleLoginView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = GoogleLoginSerializer
@@ -68,6 +74,7 @@ class GoogleLoginView(generics.GenericAPIView):
         )
 
 
+@extend_schema(tags=["Auth"])
 class MeView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
@@ -90,6 +97,7 @@ class MeView(generics.RetrieveUpdateAPIView):
         return super().put(request, *args, **kwargs)
 
 
+@extend_schema(tags=["Auth"])
 class ChangePasswordView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -107,6 +115,7 @@ class ChangePasswordView(APIView):
         return Response({"detail": "Password changed successfully."})
 
 
+@extend_schema(tags=["Auth"])
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -120,6 +129,11 @@ class LogoutView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"detail": "Logged out successfully."})
+
+
+@extend_schema(tags=["Auth"], summary="Refresh the access token")
+class TokenRefreshView(SimpleJWTTokenRefreshView):
+    """Rotate a refresh token to get a new access token."""
 
 
 __all__ = [

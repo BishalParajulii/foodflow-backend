@@ -1,7 +1,6 @@
 """Auth URL namespace: /api/v1/auth/."""
 
 from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView
 
 from apps.accounts.views import (
     ChangePasswordView,
@@ -10,6 +9,7 @@ from apps.accounts.views import (
     LogoutView,
     MeView,
     SignupView,
+    TokenRefreshView,
 )
 
 app_name = "accounts"
