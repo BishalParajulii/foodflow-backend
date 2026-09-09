@@ -203,6 +203,10 @@ SPECTACULAR_SETTINGS = {
             "name": "Menu",
             "description": "Browse and manage categories, items and modifiers.",
         },
+        {
+            "name": "Cart",
+            "description": "Per-user cart: add/update/remove lines, live totals.",
+        },
     ],
 }
 

@@ -305,13 +305,37 @@ curl -X POST http://localhost:8000/api/v1/auth/google/ \
   -d '{"id_token":"<google-id-token>"}'
 ```
 
+## Cart API (`/api/v1/cart/`)
+
+One active cart per authenticated user (auto-created, empty `200` when new).
+Single-restaurant rule: the cart locks to the first item's restaurant; adding
+from another returns 400 until `DELETE clear/`. Lines are modifier-aware —
+same item + same options merge quantities, different options stay separate
+lines. Totals are live off the menu (orders will freeze prices at checkout).
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/v1/cart/` | My cart: nested `items` (unit/line totals, option detail), `item_count`, `subtotal`. |
+| POST | `/api/v1/cart/items/` | Add: `menu_item`, `quantity` (1–99), `selected_options: [ids]`. Validates availability, option↔item compatibility and group min/max (required groups enforced). Returns the cart. |
+| PATCH/DELETE | `/api/v1/cart/items/<id>/` | Change quantity/options, or remove the line (restaurant lock resets when emptied). Users can only touch their own lines (404 otherwise). |
+| DELETE | `/api/v1/cart/clear/` | Empty the cart. |
+
+Example:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/cart/items/ \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"menu_item":1,"quantity":2,"selected_options":[3]}'
+```
+
 ## API versioning
 
 Namespace: `/api/v1/`. Implemented: `/api/v1/auth/`,
-`/api/v1/restaurants/`, `/api/v1/menu/`. Planned (not implemented):
+`/api/v1/restaurants/`, `/api/v1/menu/`, `/api/v1/cart/`.
+Planned (not implemented):
 
 ```text
-/api/v1/cart/ /api/v1/orders/ /api/v1/payments/ /api/v1/delivery/
+/api/v1/orders/ /api/v1/payments/ /api/v1/delivery/
 ```
 
 `config/urls.py` exposes the project-level `/api/v1/` placeholder plus
@@ -325,6 +349,8 @@ Namespace: `/api/v1/`. Implemented: `/api/v1/auth/`,
       management), public browsing, owner-or-staff writes
 - [x] Menu: categories, items, modifier groups/options; public read,
       owner-or-staff write; filters/search/ordering
+- [x] Cart: per-user singleton, single-restaurant lock, modifier-aware lines,
+      live totals; auth-only
 - [x] No Celery tasks
 - [x] No Channels consumers / routing / WebSocket endpoints
 - [x] No Redis caching logic
@@ -332,4 +358,4 @@ Namespace: `/api/v1/`. Implemented: `/api/v1/auth/`,
 - [x] No frontend
 - [x] Docker stack (`Dockerfile` + `docker-compose.yml` + Postgres/Redis/Celery)
 
-Next: carts / orders.
+Next: orders.

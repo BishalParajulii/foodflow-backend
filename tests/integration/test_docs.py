@@ -7,6 +7,7 @@ EXPECTED_TAGS = {
     "/api/v1/auth/": "Auth",
     "/api/v1/restaurants/": "Restaurants",
     "/api/v1/menu/": "Menu",
+    "/api/v1/cart/": "Cart",
 }
 
 
@@ -38,4 +39,5 @@ def test_tag_metadata_present():
         "Auth",
         "Restaurants",
         "Menu",
+        "Cart",
     }
