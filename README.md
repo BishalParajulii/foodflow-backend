@@ -345,14 +345,41 @@ curl -X POST http://localhost:8000/api/v1/cart/items/ \
   -d '{"menu_item":1,"quantity":2,"selected_options":[3]}'
 ```
 
+## Orders API (`/api/v1/orders/`)
+
+Checkout freezes cart lines into an order (prices + modifier choices are
+snapshotted; later menu edits never rewrite history) and clears the cart.
+Lifecycle: `pending -> confirmed -> preparing -> ready -> out_for_delivery ->
+delivered`, plus `cancelled` from `pending`/`confirmed`/`preparing`.
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| POST | `/api/v1/orders/` | Checkout my cart. Optional `delivery_address`, `phone`, `notes`. Empty cart returns 400 `empty_cart`; stale/unavailable lines return 400. Returns `201` with nested `items` (frozen `unit_price`/`line_total`, option snapshot), `item_count`, `subtotal`/`total`. |
+| GET | `/api/v1/orders/` | History (`?status=`, `?restaurant=`, `?ordering=-created_at`). Customers see own; restaurant owners also see their restaurant's; staff see all. |
+| GET | `/api/v1/orders/<id>/` | Detail. Owner, restaurant owner, or admin (others 404). |
+| PATCH | `/api/v1/orders/<id>/` | Update `status` only. Customers can only cancel `pending`/`confirmed`; forward moves need the restaurant owner/staff. Invalid jumps return 400. |
+| POST | `/api/v1/orders/<id>/cancel/` | Cancel shortcut (same rules as `PATCH {"status":"cancelled"}`). |
+
+Example:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/orders/ \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"delivery_address":"Thamel","phone":"+9779800000001"}'
+
+curl -X PATCH http://localhost:8000/api/v1/orders/<id>/ \
+  -H "Authorization: Bearer $OWNER_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"status":"confirmed"}'
+```
+
 ## API versioning
 
 Namespace: `/api/v1/`. Implemented: `/api/v1/auth/`,
-`/api/v1/restaurants/`, `/api/v1/menu/`, `/api/v1/cart/`.
+`/api/v1/restaurants/`, `/api/v1/menu/`, `/api/v1/cart/`, `/api/v1/orders/`.
 Planned (not implemented):
 
 ```text
-/api/v1/orders/ /api/v1/payments/ /api/v1/delivery/
+/api/v1/payments/ /api/v1/delivery/
 ```
 
 `config/urls.py` exposes the project-level `/api/v1/` placeholder plus
@@ -368,6 +395,8 @@ Planned (not implemented):
       owner-or-staff write; filters/search/ordering
 - [x] Cart: per-user singleton, single-restaurant lock, modifier-aware lines,
       live totals; auth-only
+- [x] Orders: checkout snapshot (frozen prices/options), history scoping,
+      status state machine + cancel; auth-only
 - [x] No Celery tasks
 - [x] No Channels consumers / routing / WebSocket endpoints
 - [x] No Redis caching logic
@@ -375,4 +404,4 @@ Planned (not implemented):
 - [x] No frontend
 - [x] Docker stack (`Dockerfile` + `docker-compose.yml` + Postgres/Redis/Celery)
 
-Next: orders.
+Next: payments.

@@ -209,6 +209,10 @@ SPECTACULAR_SETTINGS = {
             "name": "Cart",
             "description": "Per-user cart: add/update/remove lines, live totals.",
         },
+        {
+            "name": "Orders",
+            "description": "Checkout carts into orders; history and status lifecycle.",
+        },
     ],
 }
 
