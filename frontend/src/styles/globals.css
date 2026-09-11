@@ -1,0 +1,68 @@
+/* ---- Human‑curated colour palette ---- */
+/* Warm, earthy tones that feel welcoming and grounded */
+:root {
+  --color-primary:   #C41E3A; /* deep red – reminiscent of Nepali sindoor & Indian spices */
+  --color-secondary: #E07A5F; /* warm orange – like turmeric & sunset */
+  --color-accent:    #F2CC8F; /* soft golden yellow – like saffron rice */
+  --color-dark:      #3E2723; /* dark brown – earth, wood */
+  --color-cream:     #FFF8E1; /* off‑white cream – parchment, napkins */
+  --color-teal:      #009688; /* subtle teal for links/buttons – a fresh contrast */
+}
+
+/* Global reset & base styles */
+html, body, #__next {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  background-color: var(--color-cream);
+  color: var(--color-dark);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-primary);
+  line-height: 1.2;
+}
+p { line-height: 1.6; }
+
+/* Links */
+a {
+  color: var(--color-teal);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+/* Buttons */
+button, .btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background-color: var(--color-primary);
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 14px rgba(196,30,58,0.25);
+}
+button:hover, .btn:hover {
+  background-color: var(--color-secondary);
+  transform: translateY(-1px);
+  text-decoration: none;
+  color: #fff;
+}
+
+/* Images */
+img { max-width: 100%; }
+
+/* Utility classes */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+.section-padding { padding: 4rem 0; }
+.text-center { text-align: center; }
+
+@media (max-width: 640px) {
+  .section-padding { padding: 2.5rem 0; }
+}

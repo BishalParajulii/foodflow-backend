@@ -1,10 +1,10 @@
 name: foodflow
 
 # Shared env for Django/Celery containers.
-# - Container-networking values are HARDCODED: the local `.env` file is for
-#   `manage.py`/pytest runs (sqlite/localhost) and must never leak into
-#   containers (Compose interpolates `./.env` into `${...}` expressions).
-# - Tunables below stay interpolated: override via shell env or `.env.docker`.
+# - Container-networking values are HARDCODED: the local `backend/.env` file is
+#   for `manage.py`/pytest runs (sqlite/localhost) and must never leak into
+#   containers (Compose interpolates `./backend/.env` into `${...}` expressions).
+# - Tunables below stay interpolated: override via shell env or `backend/.env.docker`.
 x-app-env: &app-env
   DJANGO_SETTINGS_MODULE: config.settings.production
   DATABASE_URL: postgres://foodflow:foodflow@db:5432/foodflow
@@ -57,12 +57,12 @@ services:
       start_period: 5s
 
   web:
-    build: .
+    build: ./backend
     restart: unless-stopped
     ports:
       - "${WEB_PORT:-8000}:8000"
     env_file:
-      - path: .env.docker
+      - path: ./backend/.env.docker
         required: false
     environment: *app-env
     volumes:
@@ -75,7 +75,7 @@ services:
         condition: service_healthy
 
   celery_worker:
-    build: .
+    build: ./backend
     restart: unless-stopped
     command: ["celery", "-A", "config", "worker", "--loglevel=info"]
     healthcheck:
@@ -85,7 +85,7 @@ services:
       retries: 3
       start_period: 30s
     env_file:
-      - path: .env.docker
+      - path: ./backend/.env.docker
         required: false
     environment: *app-env
     volumes:
@@ -99,13 +99,13 @@ services:
         condition: service_started
 
   celery_beat:
-    build: .
+    build: ./backend
     restart: unless-stopped
     command: ["celery", "-A", "config", "beat", "--loglevel=info", "--schedule=/app/celerybeat/celerybeat-schedule"]
     healthcheck:
       disable: true
     env_file:
-      - path: .env.docker
+      - path: ./backend/.env.docker
         required: false
     environment: *app-env
     volumes:
@@ -116,6 +116,16 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    depends_on:
+      - web
 
 volumes:
   postgres_data:

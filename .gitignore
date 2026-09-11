@@ -31,11 +31,12 @@ celerybeat/
 # Docker
 docker-compose.override.yml
 
-# Environment
+# Environment (backend/.env + frontend/.env* are local-only, never commit)
 .env
 .env.*
-!.env.example
-!.env.docker.example
+!backend/.env.example
+!backend/.env.docker.example
+!frontend/.env.example
 
 # Secrets / certs (never commit)
 *.pem
@@ -79,5 +80,9 @@ celerybeat.pid
 dump.rdb
 appendonlydir/
 
-# Node (in case frontend is added later; no frontend in this phase)
+# Node / Next.js (frontend/)
 node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
