@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "name": "Momo Platter",
+    "description": "Steamed dumplings filled with spiced chicken or vegetables, served with tangy achar.",
+    "price": 180,
+    "image": "momo.jpg",
+    "category": "Starters"
+  },
+  {
+    "id": 2,
+    "name": "Chatamari",
+    "description": "Traditional Newari rice crepe topped with minced meat, egg, and vegetables.",
+    "price": 220,
+    "image": "chatamari.jpg",
+    "category": "Starters"
+  },
+  {
+    "id": 3,
+    "name": "Chicken Biryani",
+    "description": "Fragrant basmati rice layered with marinated chicken, saffron, and herbs.",
+    "price": 350,
+    "image": "biryani.jpg",
+    "category": "Main Course"
+  },
+  {
+    "id": 4,
+    "name": "Paneer Butter Masala",
+    "description": "Soft paneer cubes simmered in a rich tomato‑cashew gravy.",
+    "price": 300,
+    "image": "paneer.jpg",
+    "category": "Main Course"
+  },
+  {
+    "id": 5,
+    "name": "Gulab Jamun",
+    "description": "Deep‑fried milk‑solid balls soaked in cardamom‑infused sugar syrup.",
+    "price": 120,
+    "image": "gulabjamun.jpg",
+    "category": "Dessert"
+  },
+  {
+    "id": 6,
+    "name": "Masala Chai",
+    "description": "Spiced Indian tea brewed with ginger, cardamom, and milk.",
+    "price": 80,
+    "image": "chai.jpg",
+    "category": "Beverage"
+  }
+]

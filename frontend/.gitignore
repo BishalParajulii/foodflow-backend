@@ -1,0 +1,17 @@
+# Node
+node_modules/
+.next/
+out/
+# Environment (local-only, never commit; see .env.example)
+.env
+.env.*
+!.env.example
+.local
+# Logs
+*.log
+# TypeScript / Next.js generated
+*.tsbuildinfo
+next-env.d.ts
+# Misc
+.DS_Store
+Thumbs.db
