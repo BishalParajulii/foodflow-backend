@@ -217,6 +217,10 @@ SPECTACULAR_SETTINGS = {
             "name": "Reviews",
             "description": "Restaurant ratings and reviews, verified by delivered orders.",
         },
+        {
+            "name": "Notifications",
+            "description": "Inbox for order lifecycle events.",
+        },
     ],
 }
 

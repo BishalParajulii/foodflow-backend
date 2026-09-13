@@ -1,12 +1,39 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { api } from "../lib/backend";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { cart } = useCart();
   const router = useRouter();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!user) {
+      setUnread(0);
+      return;
+    }
+    let alive = true;
+    async function poll() {
+      try {
+        const data = await api.get<{ unread_count: number }>(
+          "/api/v1/notifications/unread-count/"
+        );
+        if (alive) setUnread(data.unread_count);
+      } catch {
+        // backend down or static demo — hide the badge silently
+      }
+    }
+    poll();
+    const timer = setInterval(poll, 30000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [user?.id]);
 
   async function handleLogout() {
     await logout();
@@ -54,6 +81,9 @@ export default function Navbar() {
           {user ? (
             <>
               <Link href="/orders" style={{ marginRight: "1.2rem", color: "#fff", fontWeight: 500 }}>Orders</Link>
+              <Link href="/notifications" style={{ marginRight: "1.2rem", color: "#fff", fontWeight: 500 }}>
+                Notifications{unread > 0 ? ` (${unread})` : ""}
+              </Link>
               <Link href="/cart" style={{ marginRight: "1.2rem", color: "#fff", fontWeight: 500 }}>
                 Cart{cart && cart.item_count > 0 ? ` (${cart.item_count})` : ""}
               </Link>

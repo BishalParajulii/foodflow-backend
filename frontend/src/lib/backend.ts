@@ -186,3 +186,14 @@ export type ReviewSummary = {
   average_rating: number | null;
   review_count: number;
 };
+
+export type Notification = {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  order: string | null;
+  is_read: boolean;
+  read_at: string | null;
+  created_at: string;
+};
