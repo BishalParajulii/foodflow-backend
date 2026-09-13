@@ -1,5 +1,5 @@
 type MenuItem = {
-  id: number;
+  id: number | string;
   name: string;
   description: string;
   price: number;
@@ -9,7 +9,15 @@ type MenuItem = {
 
 const FALLBACK_IMG = "/images/food.jpeg";
 
-export default function MenuCard({ item }: { item: MenuItem }) {
+export default function MenuCard({
+  item,
+  onAdd,
+  adding,
+}: {
+  item: MenuItem;
+  onAdd?: () => void;
+  adding?: boolean;
+}) {
   return (
     <div
       style={{
@@ -72,13 +80,18 @@ export default function MenuCard({ item }: { item: MenuItem }) {
             Rs. {item.price.toFixed(2)}
           </p>
           <button
+            onClick={onAdd}
+            disabled={!onAdd || adding}
+            title={!onAdd ? "Log in to order" : "Add to cart"}
             style={{
               padding: "0.5rem 1rem",
               fontSize: "0.85rem",
               borderRadius: "999px",
+              opacity: !onAdd ? 0.55 : 1,
+              cursor: !onAdd ? "not-allowed" : "pointer",
             }}
           >
-            + Add
+            {adding ? "Adding…" : "+ Add"}
           </button>
         </div>
       </div>
