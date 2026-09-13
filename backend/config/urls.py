@@ -53,11 +53,11 @@ urlpatterns = [
     path("api/v1/cart/", include("apps.carts.urls")),
     path("api/v1/orders/", include("apps.orders.urls")),
     path("api/v1/reviews/", include("apps.reviews.urls")),
+    path("api/v1/notifications/", include("apps.notifications.urls")),
     # Future app endpoints (NOT implemented in this phase):
     # path("api/v1/payments/", include("apps.payments.urls")),
     # path("api/v1/delivery/", include("apps.delivery.urls")),
     # path("api/v1/locations/", include("apps.locations.urls")),
-    # path("api/v1/notifications/", include("apps.notifications.urls")),
     # path("api/v1/promotions/", include("apps.promotions.urls")),
     # path("api/v1/analytics/", include("apps.analytics.urls")),
     # OpenAPI placeholders:
