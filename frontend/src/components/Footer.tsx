@@ -38,7 +38,7 @@ export default function Footer() {
         style={{
           display: "grid",
           gap: "2rem",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))",
           padding: "2.5rem 1.5rem",
         }}
       >

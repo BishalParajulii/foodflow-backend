@@ -7,7 +7,7 @@ export default function Hero() {
         backgroundSize: "cover",
         backgroundPosition: "center",
         color: "#fff",
-        padding: "7rem 1.5rem 6rem",
+        padding: "clamp(3.5rem, 10vw, 7rem) 1.5rem clamp(3rem, 8vw, 6rem)",
         position: "relative",
       }}
     >
@@ -16,7 +16,7 @@ export default function Hero() {
         style={{
           display: "grid",
           gap: "3rem",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))",
           alignItems: "center",
         }}
       >

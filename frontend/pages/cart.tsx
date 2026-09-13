@@ -42,6 +42,7 @@ export default function CartPage() {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    flexWrap: "wrap",
                     gap: "1rem",
                     background: "#fff",
                   }}
@@ -83,7 +84,7 @@ export default function CartPage() {
                 </li>
               ))}
             </ul>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1.2rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.8rem", marginTop: "1.2rem" }}>
               <button
                 onClick={() => clear()}
                 style={{ background: "transparent", color: "#6d5c55", border: "1px solid #e0cfb8" }}

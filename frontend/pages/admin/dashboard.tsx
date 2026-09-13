@@ -235,7 +235,7 @@ const AdminDashboard: NextPage<Props> = ({ initialMessages, initialMenu }) => {
 
       <main style={{ padding: "2rem 0" }}>
         <div className="container">
-          <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "2rem" }}>
             <button
               onClick={() => setActiveTab("messages")}
               className="btn"
@@ -375,7 +375,7 @@ const AdminDashboard: NextPage<Props> = ({ initialMessages, initialMenu }) => {
                   <div style={{ display: "grid", gap: "1rem" }}>
                     {menuItems.map(item => (
                       <div key={item.id} style={{ background: "#fff", borderRadius: "0.5rem", padding: "1rem", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.4rem", marginBottom: "0.5rem" }}>
                           <h4 style={{ margin: 0, color: "var(--color-dark)" }}>{item.name}</h4>
                           <span style={{ color: "var(--color-primary)", fontWeight: 600 }}>₹ {item.price}</span>
                         </div>

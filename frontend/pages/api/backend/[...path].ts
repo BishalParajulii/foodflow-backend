@@ -17,7 +17,12 @@ const BACKEND =
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { path, ...query } = req.query;
   const parts = Array.isArray(path) ? path : [path].filter(Boolean);
-  const target = `${BACKEND}/${parts.join("/")}`;
+  // Next.js strips trailing slashes via 308 before we run, but Django
+  // requires them (APPEND_SLASH). Re-add it so /api/v1/auth/login also works.
+  let upstream = parts.join("/");
+  const last = parts[parts.length - 1] ?? "";
+  if (last && !last.includes(".")) upstream += "/";
+  const target = `${BACKEND}/${upstream}`;
 
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(query)) {
@@ -48,6 +53,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.send(text);
     }
   } catch (e: any) {
-    res.status(502).json({ success: false, error: { message: `Backend unreachable: ${e?.message}` } });
+    res
+      .status(502)
+      .json({
+        success: false,
+        error: { message: `Backend unreachable (${BACKEND}): ${e?.message}` },
+      });
   }
 }

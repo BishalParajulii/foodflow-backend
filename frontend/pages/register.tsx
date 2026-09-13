@@ -57,9 +57,9 @@ export default function RegisterPage() {
         <p style={{ color: "#6d5c55" }}>Sign up to place orders (Cash on Delivery).</p>
         <form onSubmit={onSubmit} style={{ display: "grid", gap: "0.9rem", marginTop: "1rem" }}>
           <input style={inputStyle} type="email" required placeholder="Email" value={form.email} onChange={set("email")} />
-          <div style={{ display: "flex", gap: "0.9rem" }}>
-            <input style={inputStyle} placeholder="First name" value={form.first_name} onChange={set("first_name")} />
-            <input style={inputStyle} placeholder="Last name" value={form.last_name} onChange={set("last_name")} />
+          <div style={{ display: "flex", gap: "0.9rem", flexWrap: "wrap" }}>
+            <input style={{ ...inputStyle, flex: "1 1 140px" }} placeholder="First name" value={form.first_name} onChange={set("first_name")} />
+            <input style={{ ...inputStyle, flex: "1 1 140px" }} placeholder="Last name" value={form.last_name} onChange={set("last_name")} />
           </div>
           <input style={inputStyle} placeholder="Phone (optional)" value={form.phone} onChange={set("phone")} />
           <input style={inputStyle} type="password" required placeholder="Password (min 8 chars)" value={form.password} onChange={set("password")} />

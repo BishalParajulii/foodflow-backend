@@ -10,6 +10,7 @@ export default function Navbar() {
   const { cart } = useCart();
   const router = useRouter();
   const [unread, setUnread] = useState(0);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -37,6 +38,7 @@ export default function Navbar() {
 
   async function handleLogout() {
     await logout();
+    setOpen(false);
     router.push("/");
   }
 
@@ -73,7 +75,15 @@ export default function Navbar() {
             Food<span style={{ color: "var(--color-accent)" }}>Flow</span>
           </span>
         </Link>
-        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "0.2rem" }}>
+        <button
+          className="nav-toggle"
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {open ? "✕" : "☰"}
+        </button>
+        <div className={`nav-links${open ? " open" : ""}`} onClick={() => setOpen(false)}>
           <Link href="/" style={{ marginRight: "1.2rem", color: "#fff", fontWeight: 500 }}>Home</Link>
           <Link href="/menu" style={{ marginRight: "1.2rem", color: "#fff", fontWeight: 500 }}>Menu</Link>
           <Link href="/about" style={{ marginRight: "1.2rem", color: "#fff", fontWeight: 500 }}>About</Link>

@@ -12,7 +12,7 @@ export default function About() {
           textAlign: "center",
         }}
       >
-        <h1 style={{ color: "#fff", margin: "0 0 0.6rem", fontSize: "2.6rem" }}>About FoodFlow</h1>
+        <h1 style={{ color: "#fff", margin: "0 0 0.6rem", fontSize: "clamp(2rem, 6vw, 2.6rem)" }}>About FoodFlow</h1>
         <p style={{ margin: 0, color: "#FFEED6" }}>Rooted in Kathmandu, inspired by tradition.</p>
       </div>
 
@@ -22,7 +22,7 @@ export default function About() {
           style={{
             display: "grid",
             gap: "3rem",
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))",
             alignItems: "center",
           }}
         >
@@ -31,7 +31,7 @@ export default function About() {
             alt="Our signature yomari"
             style={{
               width: "100%",
-              height: "380px",
+              height: "clamp(220px, 55vw, 380px)",
               objectFit: "cover",
               borderRadius: "1.2rem",
               boxShadow: "0 16px 40px rgba(62,39,35,0.18)",

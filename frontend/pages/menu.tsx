@@ -113,7 +113,7 @@ export default function MenuPage() {
           textAlign: "center",
         }}
       >
-        <h1 style={{ color: "#fff", margin: "0 0 0.6rem", fontSize: "2.6rem" }}>Our Menu</h1>
+        <h1 style={{ color: "#fff", margin: "0 0 0.6rem", fontSize: "clamp(2rem, 6vw, 2.6rem)" }}>Our Menu</h1>
         <p style={{ margin: 0, color: "#FFEED6", fontSize: "1.1rem" }}>
           Browse our selection of Nepali & Indian delicacies — all photos feature our fresh yomari.
         </p>
@@ -134,7 +134,7 @@ export default function MenuPage() {
               <h2 style={{ color: "var(--color-primary)", borderBottom: "2px solid var(--color-accent)", display: "inline-block", paddingBottom: "0.3rem" }}>
                 {category}
               </h2>
-              <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", marginTop: "1.2rem" }}>
+              <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fill, minmax(min(260px, 100%), 1fr))", marginTop: "1.2rem" }}>
                 {grouped[category].map((item) => (
                   <MenuCard
                     key={String(item.id)}
