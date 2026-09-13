@@ -115,6 +115,12 @@ export default function OrderDetailPage() {
         <p style={{ fontWeight: 800 }}>Total (Cash on Delivery): Rs. {Number(order.total).toFixed(2)}</p>
         {order.delivery_address && <p>Deliver to: {order.delivery_address}</p>}
 
+        {order.status === "delivered" && (
+          <p style={{ marginTop: "1rem" }}>
+            Enjoyed your meal?{" "}
+            <Link href={`/restaurants/${order.restaurant}`}>★ Leave a review</Link>
+          </p>
+        )}
         {actionError && <p style={{ color: "var(--color-primary)" }}>{actionError}</p>}
         <div style={{ display: "flex", gap: "0.8rem", marginTop: "1rem" }}>
           <button onClick={load} disabled={busy} style={{ background: "transparent", color: "#6d5c55", border: "1px solid #e0cfb8" }}>

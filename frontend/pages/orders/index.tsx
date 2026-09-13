@@ -61,6 +61,13 @@ export default function OrdersPage() {
                   {statusLabel(o.status)} · {o.item_count} items ·{" "}
                   {new Date(o.created_at).toLocaleString()}
                 </div>
+                {o.status === "delivered" && (
+                  <div style={{ marginTop: "0.4rem" }}>
+                    <Link href={`/restaurants/${o.restaurant}`} style={{ fontSize: "0.9rem" }}>
+                      ★ Review {o.restaurant_name || "restaurant"}
+                    </Link>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

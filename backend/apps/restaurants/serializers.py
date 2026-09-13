@@ -31,6 +31,8 @@ class RestaurantSerializer(serializers.ModelSerializer):
     owner_email = serializers.ReadOnlyField(source="owner.email")
     branches = BranchSerializer(many=True, read_only=True)
     branches_count = serializers.SerializerMethodField(read_only=True)
+    rating_average = serializers.SerializerMethodField(read_only=True)
+    review_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Restaurant
@@ -47,6 +49,8 @@ class RestaurantSerializer(serializers.ModelSerializer):
             "is_active",
             "branches",
             "branches_count",
+            "rating_average",
+            "review_count",
             "created_at",
             "updated_at",
         ]
@@ -57,12 +61,23 @@ class RestaurantSerializer(serializers.ModelSerializer):
             "slug",
             "branches",
             "branches_count",
+            "rating_average",
+            "review_count",
             "created_at",
             "updated_at",
         ]
 
     def get_branches_count(self, obj: Restaurant) -> int:
         return obj.branches.count()
+
+    def get_rating_average(self, obj: Restaurant):
+        from django.db.models import Avg
+
+        avg = obj.reviews.filter(is_visible=True).aggregate(v=Avg("rating"))["v"]
+        return round(avg, 2) if avg is not None else None
+
+    def get_review_count(self, obj: Restaurant) -> int:
+        return obj.reviews.filter(is_visible=True).count()
 
 
 class RestaurantCreateMixin:

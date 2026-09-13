@@ -213,6 +213,10 @@ SPECTACULAR_SETTINGS = {
             "name": "Orders",
             "description": "Checkout carts into orders; history and status lifecycle.",
         },
+        {
+            "name": "Reviews",
+            "description": "Restaurant ratings and reviews, verified by delivered orders.",
+        },
     ],
 }
 
