@@ -154,3 +154,35 @@ export const ORDER_FLOW = [
   "out_for_delivery",
   "delivered",
 ];
+
+export type Restaurant = {
+  id: string;
+  name: string;
+  description: string;
+  phone: string;
+  address: string;
+  logo_url: string;
+  is_active: boolean;
+  rating_average: number | null;
+  review_count: number;
+};
+
+export type Review = {
+  id: string;
+  user: string;
+  user_email: string;
+  restaurant: string;
+  restaurant_name: string;
+  order: string | null;
+  rating: number;
+  title: string;
+  comment: string;
+  created_at: string;
+};
+
+export type ReviewSummary = {
+  restaurant: string;
+  restaurant_name: string;
+  average_rating: number | null;
+  review_count: number;
+};
