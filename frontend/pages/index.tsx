@@ -32,7 +32,7 @@ export default function Home() {
             We bring the authentic flavors of Nepal and India to your table, using
             traditional recipes and fresh, locally‑sourced ingredients.
           </p>
-          <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
+          <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))" }}>
             {features.map((f) => (
               <div
                 key={f.title}
@@ -61,7 +61,7 @@ export default function Home() {
           style={{
             display: "grid",
             gap: "3rem",
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))",
             alignItems: "center",
           }}
         >
@@ -71,7 +71,7 @@ export default function Home() {
               alt="Yomari close-up"
               style={{
                 width: "100%",
-                height: "380px",
+                height: "clamp(220px, 55vw, 380px)",
                 objectFit: "cover",
                 borderRadius: "1.2rem",
                 boxShadow: "0 16px 40px rgba(62,39,35,0.18)",
@@ -97,7 +97,7 @@ export default function Home() {
             <p style={{ color: "var(--color-secondary)", fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase", fontSize: "0.85rem", margin: "0 0 0.6rem" }}>
               Dish of the week
             </p>
-            <h2 style={{ margin: "0 0 1rem", fontSize: "2.2rem", color: "var(--color-dark)" }}>
+            <h2 style={{ margin: "0 0 1rem", fontSize: "clamp(1.6rem, 5vw, 2.2rem)", color: "var(--color-dark)" }}>
               Steamed Yomari with Chaku Filling
             </h2>
             <p style={{ color: "#6d5c55", lineHeight: 1.7, marginBottom: "1.5rem" }}>
@@ -125,7 +125,7 @@ export default function Home() {
           <p className="text-center" style={{ color: "#6d5c55", marginBottom: "2rem" }}>
             One signature dish, endless cravings — served all day.
           </p>
-          <div style={{ display: "grid", gap: "1.2rem", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+          <div style={{ display: "grid", gap: "1.2rem", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))" }}>
             {[
               { pos: "center", label: "Steamed Fresh" },
               { pos: "left center", label: "Chaku Filled" },

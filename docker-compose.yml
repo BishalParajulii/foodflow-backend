@@ -124,6 +124,10 @@ services:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      # Server-side only: how the Next.js proxy reaches Django *inside* the
+      # Compose network. NEVER localhost here — inside this container
+      # localhost is the frontend itself, not the backend (service: web).
+      BACKEND_URL: http://web:8000
     depends_on:
       - web
 

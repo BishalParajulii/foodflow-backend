@@ -34,7 +34,7 @@ export default function Contact() {
         style={{
           display: "grid",
           gap: "2.5rem",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))",
           alignItems: "stretch",
         }}
       >
@@ -51,7 +51,7 @@ export default function Contact() {
           <img
             src="/images/food.jpeg"
             alt="Visit us"
-            style={{ width: "100%", height: "260px", objectFit: "cover", display: "block" }}
+            style={{ width: "100%", height: "clamp(180px, 45vw, 260px)", objectFit: "cover", display: "block" }}
           />
           <div style={{ padding: "1.8rem" }}>
             <h1 style={{ margin: "0 0 0.6rem" }}>Contact Us</h1>
