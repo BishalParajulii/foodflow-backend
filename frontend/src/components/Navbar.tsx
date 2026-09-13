@@ -1,6 +1,18 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
+import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 export default function Navbar() {
+  const { user, logout } = useAuth();
+  const { cart } = useCart();
+  const router = useRouter();
+
+  async function handleLogout() {
+    await logout();
+    router.push("/");
+  }
+
   return (
     <nav
       style={{
@@ -39,13 +51,34 @@ export default function Navbar() {
           <Link href="/menu" style={{ marginRight: "1.2rem", color: "#fff", fontWeight: 500 }}>Menu</Link>
           <Link href="/about" style={{ marginRight: "1.2rem", color: "#fff", fontWeight: 500 }}>About</Link>
           <Link href="/contact" style={{ marginRight: "1.2rem", color: "#fff", fontWeight: 500 }}>Contact</Link>
-          <Link
-            href="/menu"
-            className="btn"
-            style={{ padding: "0.5rem 1.1rem", fontSize: "0.9rem", borderRadius: "999px" }}
-          >
-            Order Now
-          </Link>
+          {user ? (
+            <>
+              <Link href="/orders" style={{ marginRight: "1.2rem", color: "#fff", fontWeight: 500 }}>Orders</Link>
+              <Link href="/cart" style={{ marginRight: "1.2rem", color: "#fff", fontWeight: 500 }}>
+                Cart{cart && cart.item_count > 0 ? ` (${cart.item_count})` : ""}
+              </Link>
+              <span style={{ marginRight: "1.2rem", color: "var(--color-accent)", fontSize: "0.9rem" }}>
+                {user.first_name || user.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                style={{ background: "transparent", border: "1px solid var(--color-accent)", color: "#fff", padding: "0.4rem 0.9rem", fontSize: "0.85rem" }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" style={{ marginRight: "1.2rem", color: "#fff", fontWeight: 500 }}>Login</Link>
+              <Link
+                href="/menu"
+                className="btn"
+                style={{ padding: "0.5rem 1.1rem", fontSize: "0.9rem", borderRadius: "999px" }}
+              >
+                Order Now
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import MenuCard from "../src/components/MenuCard";
 import LoadingSpinner from "../src/components/LoadingSpinner";
 import ErrorMessage from "../src/components/ErrorMessage";
 import { fetcher } from "../src/lib/api";
+import { api, BackendError, MenuItem as DjangoItem } from "../src/lib/backend";
+import { useAuth } from "../src/context/AuthContext";
+import { useCart } from "../src/context/CartContext";
 
 type MenuItem = {
-  id: number;
+  id: number | string;
   name: string;
   description: string;
   price: number;
@@ -13,35 +17,77 @@ type MenuItem = {
   category: string;
 };
 
+function fromDjango(rows: DjangoItem[]): MenuItem[] {
+  return rows
+    .filter((r) => r.is_available)
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      description: r.description,
+      price: Number(r.price),
+      image: r.image_url || "/images/food.jpeg",
+      category: r.category_name || "Menu",
+    }));
+}
+
 export default function MenuPage() {
   const [items, setItems] = useState<MenuItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { addItem } = useCart();
+  const router = useRouter();
 
   useEffect(() => {
     async function loadMenu() {
+      // Prefer the live Django menu (via same-origin proxy); fall back to
+      // the static file menu when the backend is unreachable/empty.
       try {
-        // Internal Next.js route (pages/api/menu.ts, served on :3000).
-        // Do NOT prefix with NEXT_PUBLIC_API_URL — that points at Django
-        // (:8000) where the route is /api/v1/menu/items/, not /api/menu.
+        const rows = await api.get<DjangoItem[]>("/api/v1/menu/items/");
+        if (rows.length > 0) {
+          setItems(fromDjango(rows));
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // fall through to static menu
+      }
+      try {
         const data = await fetcher<MenuItem[]>("/api/menu");
         setItems(data);
-        // To use Django instead (requires seeded DB):
-        //   import { backendFetcher } from "../src/lib/api";
-        //   type DjangoItem = { id: string; name: string; description: string;
-        //     price: string; image_url: string; category_name: string };
-        //   const rows = await backendFetcher<DjangoItem[]>("/api/v1/menu/items/");
-        //   setItems(rows.map(r => ({ id: Number(r.id.slice(0,8)) || 0, name: r.name,
-        //     description: r.description, price: Number(r.price),
-        //     image: r.image_url, category: r.category_name })));
       } catch (err: any) {
         setError(err.message ?? "Unknown error");
       } finally {
         setLoading(false);
       }
+      setLoading(false);
     }
     loadMenu();
   }, []);
+
+  async function handleAdd(item: MenuItem) {
+    if (!user) {
+      router.push("/login?next=/menu");
+      return;
+    }
+    if (typeof item.id !== "string" || item.id.includes("-") === false) {
+      // Static fallback items have numeric ids — they don't exist in Django.
+      setNotice("This demo item isn't in the live menu yet — showing static menu.");
+      return;
+    }
+    setAddingId(String(item.id));
+    setNotice(null);
+    try {
+      await addItem(String(item.id), 1);
+      router.push("/cart");
+    } catch (err: any) {
+      setNotice(err instanceof BackendError ? err.message : "Could not add item");
+    } finally {
+      setAddingId(null);
+    }
+  }
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} />;
@@ -75,6 +121,14 @@ export default function MenuPage() {
 
       <section className="section-padding" style={{ paddingTop: "2.5rem" }}>
         <div className="container">
+          {notice && (
+            <p style={{ background: "#FFF8E1", border: "1px solid #e0cfb8", borderRadius: "0.6rem", padding: "0.7rem 1rem" }}>
+              {notice}{" "}
+              <button onClick={() => setNotice(null)} style={{ background: "transparent", border: "none", color: "var(--color-primary)", cursor: "pointer", fontWeight: 700 }}>
+                Dismiss
+              </button>
+            </p>
+          )}
           {Object.keys(grouped).map((category) => (
             <section key={category} style={{ marginBottom: "3rem" }}>
               <h2 style={{ color: "var(--color-primary)", borderBottom: "2px solid var(--color-accent)", display: "inline-block", paddingBottom: "0.3rem" }}>
@@ -82,11 +136,21 @@ export default function MenuPage() {
               </h2>
               <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", marginTop: "1.2rem" }}>
                 {grouped[category].map((item) => (
-                  <MenuCard key={item.id} item={item} />
+                  <MenuCard
+                    key={String(item.id)}
+                    item={item}
+                    onAdd={user ? () => handleAdd(item) : undefined}
+                    adding={addingId === String(item.id)}
+                  />
                 ))}
               </div>
             </section>
           ))}
+          {!user && (
+            <p style={{ color: "#6d5c55" }}>
+              Log in to add items to your cart.
+            </p>
+          )}
         </div>
       </section>
     </>
