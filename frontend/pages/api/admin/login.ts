@@ -10,8 +10,13 @@ export default function handler(
 
   const { username, password } = req.body;
 
-  // Hardcoded credentials for demo (in production use proper auth)
-  if (username === "admin" && password === "admin123") {
+  // Admin credentials come from server-side env (never NEXT_PUBLIC_*).
+  // Defaults keep local demo working; override in production via
+  //   ADMIN_USERNAME / ADMIN_PASSWORD  (see docker-compose.yml).
+  const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+
+  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
     // Set httpOnly cookie
     res.setHeader(
       "Set-Cookie",

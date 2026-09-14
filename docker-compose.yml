@@ -128,6 +128,10 @@ services:
       # Compose network. NEVER localhost here — inside this container
       # localhost is the frontend itself, not the backend (service: web).
       BACKEND_URL: http://web:8000
+      # Frontend demo-admin login (/admin/login). Django users do NOT work
+      # here — this endpoint checks these two values only.
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
     depends_on:
       - web
 

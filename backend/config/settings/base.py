@@ -77,6 +77,10 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Serves /static/ (incl. Django admin CSS/JS) straight from gunicorn.
+    # collectstatic already runs in docker-entrypoint.sh; without this,
+    # DEBUG=False never serves static files (admin looks unstyled).
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -138,6 +142,10 @@ USE_TZ = True
 # ---------------------------------------------------------------------------
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
