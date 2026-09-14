@@ -21,6 +21,7 @@ dependencies = [
     "requests>=2.31",
     "gunicorn>=22.0",
     "uvicorn[standard]>=0.30",
+    "whitenoise>=6.0",
 ]
 
 [project.optional-dependencies]

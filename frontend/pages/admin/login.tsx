@@ -64,7 +64,9 @@ export default function AdminLogin() {
           </button>
         </form>
         <p style={{ textAlign: "center", marginTop: "1.5rem", fontSize: "0.9rem", color: "#666" }}>
-          Demo credentials: username <strong>admin</strong>, password <strong>admin123</strong>
+          Default credentials: <strong>admin</strong> / <strong>admin123</strong>
+          <br />
+          (overridable via ADMIN_USERNAME / ADMIN_PASSWORD env vars)
         </p>
       </div>
     </div>

@@ -111,6 +111,10 @@ Feel free to tweak these values in `src/styles/globals.css`.
 - **Username**: `admin`
 - **Password**: `admin123`
 
+Override via server-side env vars (no rebuild needed, just restart):
+`ADMIN_USERNAME` / `ADMIN_PASSWORD` — e.g.
+`ADMIN_USERNAME=bishal ADMIN_PASSWORD='s3cret!' docker compose up -d frontend`.
+
 > **Note**: This is a simple demo authentication using a hard‑coded cookie. For production, replace with a proper authentication system (e.g., NextAuth, JWT, etc.).
 
 ## License
