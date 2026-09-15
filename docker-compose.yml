@@ -20,7 +20,12 @@ x-app-env: &app-env
   REDIS_PORT: 6379
   SECRET_KEY: ${SECRET_KEY:-django-insecure-foodflow-docker-local-only}
   DEBUG: ${DEBUG:-False}
-  ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,web,0.0.0.0}
+  # NOTE: `web` (+ 0.0.0.0) is appended unconditionally so container-to-container
+  # traffic (frontend BACKEND_URL=http://web:8000, Host: web:8000) never 400s,
+  # even when ALLOWED_HOSTS leaks from backend/.env (e.g. running compose from
+  # backend/ loads backend/.env for interpolation) or is overridden narrowly.
+  # Duplicates (web,web) are harmless — Django tolerates them.
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1},web,0.0.0.0
   JWT_ACCESS_MINUTES: ${JWT_ACCESS_MINUTES:-60}
   JWT_REFRESH_DAYS: ${JWT_REFRESH_DAYS:-7}
   GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}

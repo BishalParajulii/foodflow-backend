@@ -8,14 +8,6 @@
     "category": "Starters"
   },
   {
-    "id": 2,
-    "name": "Chatamari",
-    "description": "Traditional Newari rice crepe topped with minced meat, egg, and vegetables.",
-    "price": 220,
-    "image": "chatamari.jpg",
-    "category": "Starters"
-  },
-  {
     "id": 3,
     "name": "Chicken Biryani",
     "description": "Fragrant basmati rice layered with marinated chicken, saffron, and herbs.",

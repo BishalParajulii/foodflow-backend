@@ -11,6 +11,13 @@ DEBUG = False
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 # Deployment must provide ALLOWED_HOSTS, e.g.:
 #   ALLOWED_HOSTS=api.foodflow.example.com
+# Defense-in-depth: container-to-container traffic uses Host: web:8000
+# (frontend BACKEND_URL=http://web:8000). Always allow internal service names
+# so a narrow ALLOWED_HOSTS (e.g. leaked from backend/.env when running
+# `docker compose` from backend/) can't cause DisallowedHost 400s.
+for _internal_host in ("web", "localhost", "127.0.0.1", "0.0.0.0"):
+    if _internal_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_internal_host)
 
 # ---------------------------------------------------------------------------
 # Security / HTTPS
