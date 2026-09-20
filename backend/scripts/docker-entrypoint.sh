@@ -61,6 +61,9 @@ if [ "$SHOULD_MIGRATE" = "1" ]; then
   echo "Applying database migrations..."
   python manage.py migrate --noinput
 
+  echo "Creating platform admin (idempotent)..."
+  python manage.py createadmin
+
   echo "Collecting static files..."
   python manage.py collectstatic --noinput --clear
 else

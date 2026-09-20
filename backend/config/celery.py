@@ -1,4 +1,4 @@
-"""Celery bootstrap (ready only — no tasks are defined in this phase)."""
+"""Celery bootstrap: order lifecycle email tasks (see apps.orders.tasks)."""
 
 import os
 
@@ -11,6 +11,5 @@ app = Celery("foodflow")
 # Load `CELERY_*` settings from Django settings.
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
-# Autodiscover `tasks.py` in installed apps once tasks are added later.
-# No tasks exist yet.
+# Autodiscover `tasks.py` modules in all installed apps (apps.orders.tasks).
 app.autodiscover_tasks()

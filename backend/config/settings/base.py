@@ -285,7 +285,8 @@ CHANNEL_LAYERS = {
 }
 
 # ---------------------------------------------------------------------------
-# Celery — Celery-ready (no tasks defined yet, no worker required to boot).
+# Celery — order email tasks run here (apps.orders.tasks); a worker is only
+# required in production, tests run tasks eagerly (CELERY_TASK_ALWAYS_EAGER).
 # ---------------------------------------------------------------------------
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")

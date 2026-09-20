@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Hero() {
   return (
     <section
@@ -61,10 +63,10 @@ export default function Hero() {
             fragrant biryanis — taste tradition, made fresh daily.
           </p>
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-            <a href="/menu" className="btn" style={{ fontSize: "1.05rem" }}>
+            <Link href="/menu" className="btn" style={{ fontSize: "1.05rem" }}>
               Explore Our Menu →
-            </a>
-            <a
+            </Link>
+            <Link
               href="/about"
               style={{
                 display: "inline-block",
@@ -76,7 +78,7 @@ export default function Hero() {
               }}
             >
               Our Story
-            </a>
+            </Link>
           </div>
           <div
             style={{

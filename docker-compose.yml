@@ -29,6 +29,10 @@ x-app-env: &app-env
   JWT_ACCESS_MINUTES: ${JWT_ACCESS_MINUTES:-60}
   JWT_REFRESH_DAYS: ${JWT_REFRESH_DAYS:-7}
   GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+  # Bootstrap admin user (createadmin on web start) — used by the frontend
+  # server-side proxy to authenticate API requests as a platform admin.
+  DJANGO_ADMIN_EMAIL: ${DJANGO_ADMIN_EMAIL:-admin@foodflow.local}
+  DJANGO_ADMIN_PASSWORD: ${DJANGO_ADMIN_PASSWORD:-admin123}
 
 services:
   db:
@@ -137,6 +141,10 @@ services:
       # here — this endpoint checks these two values only.
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      # Service credentials the server-side order/analytics proxy uses to log
+      # in to Django. Must match the createadmin command on the web container.
+      DJANGO_ADMIN_EMAIL: ${DJANGO_ADMIN_EMAIL:-admin@foodflow.local}
+      DJANGO_ADMIN_PASSWORD: ${DJANGO_ADMIN_PASSWORD:-admin123}
     depends_on:
       - web
 

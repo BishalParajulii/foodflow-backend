@@ -15,6 +15,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -95,6 +96,14 @@ def _validate_cart_for_checkout(cart):
     return lines
 
 
+class OrderPagination(PageNumberPagination):
+    """Orders may request a larger page via ``?page_size=`` (admin UI)."""
+
+    page_size = 20
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
 @extend_schema(tags=["Orders"])
 @extend_schema_view(
     list=extend_schema(summary="List my orders"),
@@ -105,6 +114,7 @@ def _validate_cart_for_checkout(cart):
 class OrderViewSet(SuccessResponseMixin, viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated, IsOrderParty]
+    pagination_class = OrderPagination
     filterset_class = OrderFilter
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     # DjangoFilterBackend is global default; declare explicitly for schema.
