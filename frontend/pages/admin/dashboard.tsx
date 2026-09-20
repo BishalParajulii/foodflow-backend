@@ -66,6 +66,53 @@ type Props = {
 const DEFAULT_CATEGORIES = ["Starters", "Main Course", "Dessert", "Beverage"];
 const DEFAULT_IMAGE = "food.jpeg";
 
+type AdminOrder = {
+  id: string;
+  restaurant_name: string;
+  user_email: string;
+  status: string;
+  item_count: number;
+  subtotal: string;
+  delivery_fee: string;
+  total: string;
+  delivery_address: string;
+  phone: string;
+  notes: string;
+  created_at: string;
+};
+
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  pending: "Pending",
+  confirmed: "Confirmed",
+  preparing: "Preparing",
+  ready: "Ready",
+  out_for_delivery: "Out for delivery",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+};
+
+// Mirrors ALLOWED_TRANSITIONS in apps/orders/models.py.
+const ORDER_TRANSITIONS: Record<string, string[]> = {
+  pending: ["confirmed", "cancelled"],
+  confirmed: ["preparing", "cancelled"],
+  preparing: ["ready", "cancelled"],
+  ready: ["out_for_delivery"],
+  out_for_delivery: ["delivered"],
+  delivered: [],
+  cancelled: [],
+};
+
+const ORDER_ACTION_LABELS: Record<string, string> = {
+  confirmed: "Confirm",
+  preparing: "Start preparing",
+  ready: "Mark ready",
+  out_for_delivery: "Out for delivery",
+  delivered: "Mark delivered",
+  cancelled: "Cancel",
+};
+
+const ORDER_STATUS_OPTIONS = Object.keys(ORDER_STATUS_LABELS);
+
 type FormState = {
   name: string;
   description: string;
@@ -96,10 +143,20 @@ function toForm(item?: MenuItem | null): FormState {
 const AdminDashboard: NextPage<Props> = ({ initialMessages, initialMenu }) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenu);
-  const [activeTab, setActiveTab] = useState<"messages" | "menu">("menu");
+  const [activeTab, setActiveTab] = useState<"messages" | "menu" | "orders">("menu");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  // --- orders state ---
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [ordersCount, setOrdersCount] = useState(0);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [orderStatusFilter, setOrderStatusFilter] = useState("all");
+  const [orderSearch, setOrderSearch] = useState("");
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
   // --- menu UI state ---
   const [modalOpen, setModalOpen] = useState(false);
@@ -136,6 +193,75 @@ const AdminDashboard: NextPage<Props> = ({ initialMessages, initialMenu }) => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [modalOpen]);
+
+  // --- orders ---
+  const loadOrders = async () => {
+    setOrdersLoading(true);
+    setOrdersError(null);
+    try {
+      const params: Record<string, string> = { page_size: "50" };
+      if (orderStatusFilter !== "all") params.status = orderStatusFilter;
+      const res = await fetch(
+        `/api/admin/orders?${new URLSearchParams(params).toString()}`,
+        { credentials: "include" }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error?.message || "Failed to load orders");
+      }
+      const json = await res.json();
+      const results = Array.isArray(json?.data?.results) ? json.data.results : [];
+      setOrders(results);
+      setOrdersCount(json?.data?.count ?? results.length);
+    } catch (err: any) {
+      setOrdersError(err.message);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "orders") loadOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, orderStatusFilter]);
+
+  const filteredOrders = useMemo(() => {
+    const q = orderSearch.trim().toLowerCase();
+    if (!q) return orders;
+    return orders.filter(
+      (o) =>
+        o.restaurant_name.toLowerCase().includes(q) ||
+        o.user_email.toLowerCase().includes(q) ||
+        o.id.toLowerCase().includes(q)
+    );
+  }, [orders, orderSearch]);
+
+  const updateOrderStatus = async (id: string, status: string) => {
+    setUpdatingOrderId(id);
+    setOrdersError(null);
+    try {
+      const res = await fetch("/api/admin/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error?.message || "Failed to update order");
+      }
+      await loadOrders();
+    } catch (err: any) {
+      setOrdersError(err.message);
+      await loadOrders();
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const toggleOrder = (id: string) => {
+    setExpandedOrderId((prev) => (prev === id ? null : id));
+  };
 
   // --- messages ---
   const deleteMessage = async (id: string) => {
@@ -297,6 +423,12 @@ const AdminDashboard: NextPage<Props> = ({ initialMessages, initialMenu }) => {
           >
             Messages · {messages.length}
           </button>
+          <button
+            onClick={() => setActiveTab("orders")}
+            className={`tab ${activeTab === "orders" ? "active" : ""}`}
+          >
+            Orders · {ordersCount}
+          </button>
         </div>
 
         {error && <p className="error-banner">{error}</p>}
@@ -379,6 +511,133 @@ const AdminDashboard: NextPage<Props> = ({ initialMessages, initialMenu }) => {
                     </div>
                   </article>
                 ))}
+              </div>
+            )}
+          </section>
+        ) : activeTab === "orders" ? (
+          <section>
+            <div className="menu-header">
+              <div>
+                <h2>Orders</h2>
+                <p className="muted">
+                  {ordersCount} total · showing {filteredOrders.length}
+                </p>
+              </div>
+            </div>
+
+            <div className="toolbar">
+              <input
+                type="search"
+                placeholder="Search restaurant, customer, or id…"
+                value={orderSearch}
+                onChange={(e) => setOrderSearch(e.target.value)}
+                className="input"
+                aria-label="Search orders"
+              />
+              <select
+                value={orderStatusFilter}
+                onChange={(e) => setOrderStatusFilter(e.target.value)}
+                className="input select"
+                aria-label="Filter by status"
+              >
+                <option value="all">All statuses</option>
+                {ORDER_STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {ORDER_STATUS_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {ordersError && <p className="error-banner">{ordersError}</p>}
+
+            {ordersLoading ? (
+              <div className="empty">
+                <p className="empty-title">Loading orders…</p>
+              </div>
+            ) : filteredOrders.length === 0 ? (
+              <div className="empty">
+                <p className="empty-title">No orders</p>
+                <p className="muted">
+                  {ordersCount === 0
+                    ? "Orders placed by customers will appear here."
+                    : "Try a different filter or search."}
+                </p>
+              </div>
+            ) : (
+              <div className="order-list">
+                {filteredOrders.map((order) => {
+                  const transitions = ORDER_TRANSITIONS[order.status] || [];
+                  const canCancel = transitions.includes("cancelled");
+                  const forwarded = transitions.filter((t) => t !== "cancelled");
+                  const expanded = expandedOrderId === order.id;
+                  return (
+                    <article key={order.id} className="card order-card">
+                      <div className="card-top">
+                        <span className={`pill status-pill status-${order.status}`}>
+                          {ORDER_STATUS_LABELS[order.status] || order.status}
+                        </span>
+                        <span className="price">Rs. {Number(order.total).toFixed(2)}</span>
+                      </div>
+                      <h3 className="card-name">
+                        {order.restaurant_name} · #{order.id.slice(0, 8)}
+                      </h3>
+                      <p className="card-desc">
+                        {order.user_email} · {new Date(order.created_at).toLocaleString()}
+                      </p>
+                      <p className="muted">
+                        {order.item_count} item(s) · {order.delivery_address || "no address"}
+                      </p>
+
+                      {expanded && (
+                        <div className="order-detail">
+                          {order.phone && (
+                            <p className="muted">
+                              <strong>Phone:</strong> {order.phone}
+                            </p>
+                          )}
+                          {order.notes && (
+                            <p className="muted">
+                              <strong>Notes:</strong> {order.notes}
+                            </p>
+                          )}
+                          <p className="muted">
+                            <strong>Subtotal:</strong> Rs. {Number(order.subtotal).toFixed(2)} ·{" "}
+                            <strong>Delivery:</strong> Rs. {Number(order.delivery_fee).toFixed(2)}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="card-actions">
+                        <button
+                          onClick={() => toggleOrder(order.id)}
+                          className="btn-small secondary"
+                        >
+                          {expanded ? "Less" : "Details"}
+                        </button>
+                        {forwarded.map((nextStatus) => (
+                          <button
+                            key={nextStatus}
+                            onClick={() => updateOrderStatus(order.id, nextStatus)}
+                            className="btn-small secondary"
+                            disabled={updatingOrderId === order.id}
+                          >
+                            {ORDER_ACTION_LABELS[nextStatus] || nextStatus}
+                          </button>
+                        ))}
+                        {canCancel && (
+                          <button
+                            onClick={() => updateOrderStatus(order.id, "cancelled")}
+                            className="btn-small danger"
+                            disabled={updatingOrderId === order.id}
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </section>
@@ -585,6 +844,20 @@ const AdminDashboard: NextPage<Props> = ({ initialMessages, initialMenu }) => {
 
         .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
         .msg-list { display: grid; gap: 1rem; }
+        .order-list { display: grid; gap: 1rem; }
+        .order-detail {
+          background: #faf5ec; border: 1px solid #f0e2c8; border-radius: 0.6rem;
+          padding: 0.7rem 0.9rem; margin-top: 0.25rem;
+        }
+        .order-detail p { margin: 0.2rem 0; }
+
+        .status-pending { background: #f5ecd7; color: #8a6d1f; }
+        .status-confirmed { background: #e3f0ff; color: #1f5f9a; }
+        .status-preparing { background: #fff0e0; color: #a05a17; }
+        .status-ready { background: #e6f5e3; color: #2e7d32; }
+        .status-out_for_delivery { background: #eae6ff; color: #4a3fa0; }
+        .status-delivered { background: #ddf3f0; color: #00796b; }
+        .status-cancelled { background: #fdecec; color: #b3261e; }
         .card {
           background: #fff; border: 1px solid #f0e2c8; border-radius: 0.9rem;
           padding: 1rem 1.1rem; box-shadow: 0 2px 8px rgba(62,39,35,0.06);
